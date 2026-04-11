@@ -19,7 +19,7 @@ export async function login(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/onboarding')
+  redirect('/select-domain')
 }
 
 export async function signup(formData: FormData) {
@@ -40,5 +40,5 @@ export async function signup(formData: FormData) {
   }
 
   revalidatePath('/', 'layout')
-  redirect('/onboarding')
+  redirect('/select-domain')
 }

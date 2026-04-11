@@ -40,7 +40,11 @@ export async function updateSession(request: NextRequest) {
     (request.nextUrl.pathname.startsWith('/dashboard') ||
      request.nextUrl.pathname.startsWith('/onboarding') ||
      request.nextUrl.pathname.startsWith('/select-domain') || 
-     request.nextUrl.pathname.startsWith('/domain-info'))
+     request.nextUrl.pathname.startsWith('/domain-info') ||
+     request.nextUrl.pathname.startsWith('/quiz') ||
+     request.nextUrl.pathname.startsWith('/roadmap') ||
+     request.nextUrl.pathname.startsWith('/subjects') ||
+     request.nextUrl.pathname.startsWith('/transition'))
   ) {
     // no user, potentially respond by redirecting the user to the login page
     const url = request.nextUrl.clone()

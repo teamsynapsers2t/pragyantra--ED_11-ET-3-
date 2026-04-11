@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function LiveDashboardSection() {
   return (
@@ -67,9 +68,9 @@ export default function LiveDashboardSection() {
               ))}
             </ul>
 
-            <button className="px-8 py-4 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold shadow-[0_0_30px_rgba(234,88,12,0.4)] transition-all">
+            <Link href="/sign-in" className="inline-block px-8 py-4 bg-orange-600 hover:bg-orange-500 text-white rounded-xl font-bold shadow-[0_0_30px_rgba(234,88,12,0.4)] transition-all">
               Initialize Dashboard
-            </button>
+            </Link>
           </motion.div>
         </div>
 

@@ -117,7 +117,7 @@ export default function Hero() {
 
           {/* 🔥 FIXED NAVIGATION BUTTON */}
           <motion.button
-            onClick={() => window.location.href = "/select-domain"}
+            onClick={() => document.getElementById('features')?.scrollIntoView({ behavior: 'smooth' })}
             initial={{ opacity: 0, scale: 0.85, y: 15 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             transition={{
@@ -127,22 +127,8 @@ export default function Hero() {
             }}
             className="bg-orange-500 hover:scale-105 transition-transform duration-300 hover:bg-orange-600 text-white px-6 py-3 rounded-xl shadow-lg"
           >
-            Diagnose your weaknesses →
+            Explore Now →
           </motion.button>
-
-          <motion.button
-            initial={{ opacity: 0, scale: 0.85, y: 15 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            transition={{
-              duration: 0.5,
-              delay: 1.35,
-              ease: [0.34, 1.56, 0.64, 1],
-            }}
-            className="text-gray-700 hover:underline text-base"
-          >
-            Learn more →
-          </motion.button>
-
         </div>
 
       </div>

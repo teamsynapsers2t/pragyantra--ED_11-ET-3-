@@ -1,6 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
+import Link from "next/link";
 
 export default function MicroWeaknessSection() {
   return (
@@ -67,9 +68,9 @@ export default function MicroWeaknessSection() {
               ))}
             </ul>
 
-            <button className="px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-[0_0_30px_rgba(249,115,22,0.4)] transition-all">
+            <Link href="/sign-in" className="inline-block px-8 py-4 bg-orange-500 hover:bg-orange-600 text-white rounded-xl font-bold shadow-[0_0_30px_rgba(249,115,22,0.4)] transition-all">
               Initialize Free Scan
-            </button>
+            </Link>
           </motion.div>
         </div>
 

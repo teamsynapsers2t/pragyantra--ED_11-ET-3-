@@ -99,7 +99,7 @@ export default function FeaturesShowcase() {
   const router = useRouter();
 
   return (
-    <section className="relative min-h-screen flex flex-col items-center justify-center bg-[#fdfbf9] grid-bg px-6 py-32 overflow-hidden">
+    <section id="features" className="relative min-h-screen flex flex-col items-center justify-center bg-[#fdfbf9] grid-bg px-6 py-32 overflow-hidden">
       
       {/* Subtle Background Elements */}
       <WaveBackground />
