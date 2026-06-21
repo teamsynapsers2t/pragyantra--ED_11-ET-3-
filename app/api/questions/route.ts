@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getQuestionMapping } from '@/utils/chapterMapping'
+import { getQuestionMapping, CHAPTER_MAPPING } from '@/utils/chapterMapping'
 
 export async function GET(req: Request) {
   try {
@@ -26,14 +26,37 @@ export async function GET(req: Request) {
     console.log("[API Questions] Clerk userId:", userId)
     console.log("[API Questions] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
 
+    // chapter_id in DB uses an offset: cid >= 87 in the mapping means DB id = cid + 1
+    const toDbChapterId = (cid: number) => cid >= 87 ? cid + 1 : cid
+
     let query = supabase
       .from('questions')
       .select('*, question_options(*), question_concepts(concept_id)')
-
-    // Fetch all questions to filter and map in memory
-    const { data: questions, error } = await query
       .order('year', { ascending: false })
       .order('id')
+
+    // Push explicit filters to the DB before fetching rows
+    if (subject && subject !== 'All') {
+      const ids = Object.entries(CHAPTER_MAPPING)
+        .filter(([, v]) => v.subject.toLowerCase() === subject.toLowerCase())
+        .map(([k]) => toDbChapterId(parseInt(k)))
+      query = query.in('chapter_id', ids)
+    }
+    if (chapter && chapter !== 'All') {
+      const entry = Object.entries(CHAPTER_MAPPING).find(([, v]) => v.chapter === chapter)
+      if (entry) query = query.eq('chapter_id', toDbChapterId(parseInt(entry[0])))
+    }
+    if (difficulty && difficulty !== 'All') {
+      query = query.eq('difficulty', difficulty.toLowerCase())
+    }
+    if (yearStr && yearStr !== 'All') {
+      query = query.eq('year', parseInt(yearStr))
+    }
+    if (exam && exam !== 'All') {
+      query = query.ilike('exam_type', `%${exam}%`)
+    }
+
+    const { data: questions, error } = await query
 
     if (error) {
       console.error("[API Questions] Supabase fetch error:", error)
@@ -103,26 +126,11 @@ export async function GET(req: Request) {
       }
     })
 
-    // Apply filtering in memory
-    console.log(`[API Questions] Total mapped questions: ${mappedQuestions.length}. Filtering inputs - subject: ${subject}, chapter: ${chapter}, topic: ${topic}`)
-    if (subject && subject !== 'All') {
-      mappedQuestions = mappedQuestions.filter(q => q.subject.toLowerCase() === subject.toLowerCase())
-      console.log(`[API Questions] After subject filter (${subject}): ${mappedQuestions.length}`)
-    }
-    if (chapter && chapter !== 'All') {
-      mappedQuestions = mappedQuestions.filter(q => q.chapter === chapter)
-    }
+    // subject, chapter, difficulty, year, exam are already filtered at the DB level above.
+    // topic must stay in JS because it is resolved from question_concepts, not a flat column.
+    console.log(`[API Questions] Total mapped questions: ${mappedQuestions.length}. Filtering inputs - topic: ${topic}`)
     if (topic && topic !== 'All') {
       mappedQuestions = mappedQuestions.filter(q => q.topic === topic)
-    }
-    if (difficulty && difficulty !== 'All') {
-      mappedQuestions = mappedQuestions.filter(q => q.difficulty === difficulty.toLowerCase())
-    }
-    if (exam && exam !== 'All') {
-      mappedQuestions = mappedQuestions.filter(q => q.exam.toLowerCase().includes(exam.toLowerCase()))
-    }
-    if (yearStr && yearStr !== 'All') {
-      mappedQuestions = mappedQuestions.filter(q => String(q.year) === yearStr)
     }
 
     // Apply pagination in memory

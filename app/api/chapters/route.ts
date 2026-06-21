@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
-import { getQuestionMapping } from '@/utils/chapterMapping'
+import { getQuestionMapping, CHAPTER_MAPPING } from '@/utils/chapterMapping'
 
 export async function GET(req: Request) {
   try {
@@ -19,10 +19,18 @@ export async function GET(req: Request) {
 
     const supabase = await createClient()
 
-    // Fetch unique chapter_ids from questions table with their question options and types
+    // Resolve DB chapter_ids for the requested subject before hitting the DB.
+    // chapter_id in DB uses an offset: cid >= 87 in the mapping means DB id = cid + 1.
+    const toDbChapterId = (cid: number) => cid >= 87 ? cid + 1 : cid
+    const subjectChapterIds = Object.entries(CHAPTER_MAPPING)
+      .filter(([, v]) => v.subject.toLowerCase() === subject.toLowerCase())
+      .map(([k]) => toDbChapterId(parseInt(k)))
+
+    // Fetch only questions belonging to the requested subject
     const { data: questions, error } = await supabase
       .from('questions')
       .select('chapter_id, question_type, question_options(id)')
+      .in('chapter_id', subjectChapterIds)
 
     if (error) {
       console.error("Error fetching chapters:", error)
