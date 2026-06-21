@@ -1,0 +1,85 @@
+<USER_REQUEST>
+# PAPER — Micro-Weakness Engine: Build & Hardening Brief
+
+> Paste this entire document into Antigravity as your task brief. It contains the
+> full project context, the current state of the database, the exact contracts the
+> code must respect, the remaining work, the rules you must not break, and how to
+> verify everything works. Read all of it before making changes.
+
+---
+
+## 0. Your role and the prime directive
+
+You are the senior engineer finishing an AI-powered JEE prep platform called **PAPER**.
+Before any change, ask one question: **"Does this improve PAPER's ability to identify WHY a student is losing marks?"** If not, it is not a priority.
+
+PAPER's entire differentiator is answering **why**, not **where**. Every competitor says
+"you're weak in Projectile Motion." PAPER says "your real problem is Vector Addition,
+and your errors there are mostly sign errors." Protect that promise above all else.
+
+---
+
+## 1. Tech stack (do not change without asking)
+
+- Frontend: Next.js 15 (App Router), React, TypeScript, Tailwind CSS, ShadCN
+- Backend / DB: Supabase (PostgreSQL)
+- Auth: Clerk
+- No external AI/3rd-party APIs are permitted in the engine or reports. Everything is
+  deterministic SQL + app code. (Accuracy over feature count.)
+
+---
+
+## 2. What is ALREADY built — DO NOT REBUILD OR DROP THIS
+
+The database and the entire detection engine already exist and are live. Your job is to
+integrate, schedule, surface, secure, and test it — **not** to redesign it.
+
+### 2.1 Tables (already exist)
+`attempts`, `chapters`, `concepts`, `concept_prerequisites`, `concept_mastery`,
+`question_concepts`, `question_options`, `question_stats`, `questions`, `sessions`,
+`interaction_events`, `weakness_signals`, `weakness_reports`, `users`,
+plus dormant `sub_concepts` / `question_subconcepts` (IGNORE these — see Rules),
+and `questions_backup` (NEVER read or write this — it is a backup).
+
+### 2.2 Key columns added and seeded
+- `question_options.error_type` — text, the mis
+<truncated 9710 bytes>
+tence.
+- After enabling RLS (Task 6): the trigger still fires on insert, and a student can read only
+  their own `weakness_reports` / signals.
+
+Also run a quick integrity pass:
+- No `weakness_signals` rows reference a non-existent concept or user.
+- `question_concepts` covers the questions used in testing (every tested question maps to ≥1 concept).
+
+---
+
+## 7. Deliverables checklist
+- [ ] Attempt-save code conforms to the §3.2 contract (is_correct + time_taken_ms always set).
+- [ ] Session start/end implemented; session-end calls `fn_generate_weakness_report` via RPC.
+- [ ] `pg_cron` job refreshing `question_stats` nightly.
+- [ ] Weakness report UI (root cause first, then weak concepts w/ error type, then time traps).
+- [ ] `error_type` tagging admin page.
+- [ ] RLS enabled + policies + `SECURITY DEFINER` on engine functions; trigger verified under RLS.
+- [ ] Seed/verification script in the repo with the §6 assertions passing.
+- [ ] Short README section documenting the pipeline, the tunables, and how to adjust sensitivity.
+
+When everything in §6 passes and the checklist is complete, summarize what you changed,
+which files you touched, and any decisions you made (e.g. the numerical tolerance you chose).
+```
+
+check this and the things whoch are remainig work on that
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-06-18T18:22:47+05:30.
+
+The user's current state is as follows:
+Active Document: c:\Users\tumra\Documents\paper-AI\paper-ai\app\dashboard\page.tsx (LANGUAGE_TSX)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\tumra\Documents\paper-AI\paper-ai\app\subjects\page.tsx (LANGUAGE_TSX)
+- c:\Users\tumra\Documents\paper-AI\paper-ai\scratch\test_options.py (LANGUAGE_PYTHON)
+- c:\Users\tumra\Documents\paper-AI\paper-ai\scratch\probe_prerequisites_cols.py (LANGUAGE_PYTHON)
+- c:\Users\tumra\Documents\paper-AI\paper-ai\app\domain-info\[domain]\page.tsx (LANGUAGE_TSX)
+- c:\Users\tumra\Documents\paper-AI\paper-ai\app\quiz\page.tsx (LANGUAGE_TSX)
+</ADDITIONAL_METADATA>

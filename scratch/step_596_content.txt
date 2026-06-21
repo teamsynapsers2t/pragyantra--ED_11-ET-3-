@@ -1,0 +1,67 @@
+Created At: 2026-06-12T17:03:48Z
+Completed At: 2026-06-12T17:03:48Z
+File Path: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/app/dashboard/page.tsx`
+Total Lines: 995
+Total Bytes: 58570
+Showing lines 800 to 995
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+800:                           </div>
+801:                         );
+802:                       })}
+803:                     </div>
+804:                   </div>
+805:                 )}
+806: 
+807:                 <div className="grid grid-cols-2 gap-4">
+808:                   <CardShell title="Topic-by-Topic Micro Weakness Analysis">
+809:                     <table className="w-full border-collapse">
+810:                       <thead>
+811:                         <tr className="bg-orange-50">
+812:                           {["Topic", "Mastery (%)", "Accuracy (%)", "Questions Attempted"].map((h) => (
+813:                             <th key={h} className="text-left px-3 py-2.5 text-orange-700 font-bold text-[11px] uppercase tracking-wide">{h}</th>
+814:                           ))}
+815:                         </tr>
+816:                       </thead>
+817:                       <tbody>
+818:                         {microWeakness.map((row, i) => (
+819:                           <tr key={row.topic} className={i % 2 === 0 ? "bg-white" : "bg-orange-50/50"}>
+820:                             <td className="px-3 py-2.5 text-[13px] font-semibold text-gray-800">{row.topic}</td>
+821:                             <td className="px-3 py-2.5 text-[13px] text-gray-700">{row.mastery}</td>
+822:                             <td className="px-3 py-2.5 text-[13px] text-gray-700">{row.accuracy}</td>
+823:                             <td className="px-3 py-2.5 text-[13px] text-gray-700">{row.attempted}</td>
+824:                           </tr>
+825:               
+<truncated 10028 bytes>
+ineChart data={studyProgress}>
+965:                         <CartesianGrid strokeDasharray="3 3" stroke="#fde8d8" />
+966:                         <XAxis dataKey="month" tick={{ fontSize: 11, fill: "#444" }} />
+967:                         <YAxis domain={[40, 80]} tick={{ fontSize: 11, fill: "#444" }} />
+968:                         <Tooltip contentStyle={{ fontSize: 12 }} />
+969:                         <Legend iconType="circle" wrapperStyle={{ fontSize: 12, color: "#444" }} />
+970:                         <Line type="monotone" dataKey="mastery" name="Mastery Score" stroke="#f97316" strokeWidth={2.5} dot={{ r: 4, fill: "#f97316" }} />
+971:                         <Line type="monotone" dataKey="accuracy" name="Accuracy Rate" stroke="#fdba74" strokeWidth={2.5} dot={{ r: 4, fill: "#fdba74" }} />
+972:                       </LineChart>
+973:                     </ResponsiveContainer>
+974:                   </CardShell>
+975:                 </div>
+976:               </main>
+977: 
+978:               <footer className="text-center text-[11px] text-gray-400 py-3 border-t border-orange-100 mt-1">
+979:                 Powered by VIA · Smart Study Platform
+980:               </footer>
+981:             </>
+982:           )}
+983: 
+984:           {!["dashboard", "roadmap", "revision"].includes(activeNav) && (
+985:             <div className="flex flex-col items-center justify-center h-full text-gray-400 gap-3 pb-20">
+986:               <span className="text-6xl">🚧</span>
+987:               <p className="text-base font-bold text-gray-600">{navItems.find((n) => n.id === activeNav)?.label} — Coming Soon</p>
+988:               <p className="text-sm text-gray-400">This section is under development.</p>
+989:             </div>
+990:           )}
+991:         </div>
+992:       </div>
+993:     </div>
+994:   );
+995: }
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

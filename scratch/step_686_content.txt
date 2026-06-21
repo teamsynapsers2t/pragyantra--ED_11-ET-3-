@@ -1,0 +1,95 @@
+Created At: 2026-06-12T17:07:15Z
+Completed At: 2026-06-12T17:07:15Z
+File Path: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/scratch/viewed_dashboard_800.txt`
+Total Lines: 85
+Total Bytes: 3243
+Showing lines 1 to 85
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: Created At: 2026-06-12T16:36:22Z
+2: Completed At: 2026-06-12T16:36:22Z
+3: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/app/dashboard/page.tsx`
+4: Total Lines: 1074
+5: Total Bytes: 50731
+6: Showing lines 1 to 800
+7: The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+8: "use client";
+9: 
+10: import { useState, useEffect, useRef } from "react";
+11: import { UserButton, useUser } from "@clerk/nextjs";
+12: import { useRouter } from "next/navigation";
+13: 
+14: interface Question {
+15: id: string;
+16: subject: string;
+17: chapter: string;
+18: topic: string;
+19: question: string;
+20: options: string[];
+21: answer: number;
+22: explanation: string;
+23: difficulty: string;
+24: exam: string;
+25: year: number;
+26: }
+27: 
+28: interface ChapterData {
+29: name: string;
+30: topics: string[];
+31: }
+32: 
+33: export default function DashboardPage() {
+34: const { user, isLoaded } = useUser();
+35: const router = useRouter();
+36: 
+37: // Active filter state
+38: const [activeSubject, setActiveSubject] = useState<string | null>(null); // 'Physics', 'Chemistry', 'Mathematics' or null
+39: const [chapters, setChapters] = useState<ChapterData[]>([]);
+40: const [activeChapter, setActiveChapter] = useState<string | null>(null);
+41: const [activeTopic, setActiveTopic] = useState<string | null>(null);
+42: 
+43: // Sidebar state
+44: const [expandedChapte
+<truncated 24 bytes>
+ useState<string | null>(null);
+45: 
+46: // Filter settings
+47: const [selectedDifficulty, setSelectedDifficulty] = useState<string>("All");
+48: const [selectedExam, setSelectedExam] = useState<string>("All");
+49: const [selectedYear, setSelectedYear] = useState<string>("All");
+50: 
+51: // Questions and Paginated Feed state
+52: const [questions, setQuestions] = useState<Question[]>([]);
+53: const [currentQuestionIndex, setCurrentQuesti
+54: <truncated 34896 bytes>
+55: e">
+56: {questions[currentQuestionIndex].exam.toUpperCase()} {questions[currentQuestionIndex].year}
+57: </span>
+58: <span className="text-[11px] font-bold text-gray-400 bg-[#16223f] border border-[#1e293b] px-2.5 py-1 rounded-md capitalize">
+59: {questions[currentQuestionIndex].difficulty}
+60: </span>
+61: </div>
+62: 
+63: {/* Dynamic Timer Display */}
+64: <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400 bg-[#090d16] px-3 py-1.5 border border-[#1e293b] rounded-full">
+65: <span className="animate-pulse text-amber-500">⏱</span>
+66: <span className="font-mono">{formatTime(timeSpent)}</span>
+67: </div>
+68: </div>
+69: 
+70: {/* Question Content Body */}
+71: <div className="p-6 md:p-8 space-y-6">
+72: 
+73: {/* Latex Question Text */}
+74: <div 
+75: className="text-white text-base md:text-lg font-medium leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
+76: dangerouslySetInnerHTML={{ __html: questions[currentQuestionIndex].question }}
+77: />
+78: 
+79: {/* Option Choices Container or Numerical Input */}
+80: {(questions[currentQuestionIndex] as any).question_type === 'numerical' ? (
+81: <div className="space-y-4 mt-6">
+82: <p className="text-sm font-bold text-gray-400">Enter your numerical answer:</p>
+83: <input
+84: The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.
+85: 
+The above content shows the entire, complete file contents of the requested file.

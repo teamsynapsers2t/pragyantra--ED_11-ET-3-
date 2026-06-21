@@ -1,0 +1,12 @@
+--- MATCH IN C:\Users\tumra\.gemini\antigravity-ide\brain\40d4e476-ee4a-4110-9431-8d8a9b470255\.system_generated\tasks\task-967.log ---
+e function pu
+RPC fn_apply_attempt with params ['p_attempt_id']: status=204, response=
+
+--- Probing fn_detect_root_flaws ---
+RPC fn_detect_root_flaws with params ['p_user_id']: status=204, response=
+
+--- Probing fn_generate_weakness_report ---
+RPC fn_generate_weakness_report with params ['p_user_id']: status=401, response={"code":"42501","details":null,"hint":null,"message":"new row violates row-level security policy for table \"weakness_reports\""}
+
+================================================================================
+

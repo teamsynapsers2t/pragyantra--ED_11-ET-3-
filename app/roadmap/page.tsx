@@ -14,8 +14,8 @@ export default function Roadmap() {
         <div className="bg-white p-6 rounded-xl shadow">
           <h2 className="text-xl font-bold text-orange-500">Weak Areas ⚠️</h2>
           <ul className="mt-3 text-gray-700 space-y-1">
-            <li>• Kinematics</li>
-            <li>• Organic Chemistry</li>
+            <li>• Maths in Physics</li>
+            <li>• Fundamentals of Vectors</li>
           </ul>
         </div>
 

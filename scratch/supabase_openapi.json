@@ -1,0 +1,4974 @@
+{
+  "swagger": "2.0",
+  "info": {
+    "description": "",
+    "title": "standard public schema",
+    "version": "14.5"
+  },
+  "host": "pdnpfpjtbpmuvzopvren.supabase.co:443",
+  "basePath": "/",
+  "schemes": [
+    "https"
+  ],
+  "consumes": [
+    "application/json",
+    "application/vnd.pgrst.object+json;nulls=stripped",
+    "application/vnd.pgrst.object+json",
+    "text/csv"
+  ],
+  "produces": [
+    "application/json",
+    "application/vnd.pgrst.object+json;nulls=stripped",
+    "application/vnd.pgrst.object+json",
+    "text/csv"
+  ],
+  "paths": {
+    "/": {
+      "get": {
+        "produces": [
+          "application/openapi+json",
+          "application/json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "summary": "OpenAPI description (this document)",
+        "tags": [
+          "Introspection"
+        ]
+      }
+    },
+    "/concepts": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/concepts"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "concepts"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.concepts"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "concepts"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concepts"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/body.concepts"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concepts"
+        ]
+      }
+    },
+    "/questions_backup": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/questions_backup"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "questions_backup"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.questions_backup"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "questions_backup"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "questions_backup"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions_backup.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/body.questions_backup"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "questions_backup"
+        ]
+      }
+    },
+    "/question_subconcepts": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.sub_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.weight"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/question_subconcepts"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "question_subconcepts"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.question_subconcepts"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "question_subconcepts"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.sub_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.weight"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_subconcepts"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.sub_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_subconcepts.weight"
+          },
+          {
+            "$ref": "#/parameters/body.question_subconcepts"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_subconcepts"
+        ]
+      }
+    },
+    "/attempts": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.attempts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.selected_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.is_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.time_taken_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.changed_answer_count"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_hint"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_solution"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.attempt_order"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.confidence_rating"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.error_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.numerical_response"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/attempts"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.attempts"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.attempts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.selected_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.is_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.time_taken_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.changed_answer_count"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_hint"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_solution"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.attempt_order"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.confidence_rating"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.error_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.numerical_response"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.attempts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.selected_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.is_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.time_taken_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.changed_answer_count"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_hint"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.opened_solution"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.attempt_order"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.confidence_rating"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.error_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.attempts.numerical_response"
+          },
+          {
+            "$ref": "#/parameters/body.attempts"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "attempts"
+        ]
+      }
+    },
+    "/questions": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.expected_time_ms"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/questions"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "questions"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.questions"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "questions"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.expected_time_ms"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "questions"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.questions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.chapter_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.explanation"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.difficulty"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.correct_option"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.year"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.source"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.question_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.numerical_answer"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.negative_marks"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.solution_image_url"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.questions.expected_time_ms"
+          },
+          {
+            "$ref": "#/parameters/body.questions"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "questions"
+        ]
+      }
+    },
+    "/chapters": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.chapters.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.subject"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.chapter_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.created_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/chapters"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "chapters"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.chapters"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "chapters"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.chapters.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.subject"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.chapter_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.created_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "chapters"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.chapters.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.subject"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.chapter_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.chapters.created_at"
+          },
+          {
+            "$ref": "#/parameters/body.chapters"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "chapters"
+        ]
+      }
+    },
+    "/question_concepts": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.weight"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/question_concepts"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "question_concepts"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.question_concepts"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "question_concepts"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.weight"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_concepts"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_concepts.weight"
+          },
+          {
+            "$ref": "#/parameters/body.question_concepts"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_concepts"
+        ]
+      }
+    },
+    "/interaction_events": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_data"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_timestamp_ms"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/interaction_events"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "interaction_events"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.interaction_events"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "interaction_events"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_data"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_timestamp_ms"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "interaction_events"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.session_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_data"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.interaction_events.event_timestamp_ms"
+          },
+          {
+            "$ref": "#/parameters/body.interaction_events"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "interaction_events"
+        ]
+      }
+    },
+    "/concept_mastery": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.mastery_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.average_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.weakness_level"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/concept_mastery"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "concept_mastery"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.concept_mastery"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "concept_mastery"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.mastery_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.average_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.weakness_level"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concept_mastery"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.mastery_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.updated_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.total_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.average_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_mastery.weakness_level"
+          },
+          {
+            "$ref": "#/parameters/body.concept_mastery"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concept_mastery"
+        ]
+      }
+    },
+    "/weakness_signals": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.signal"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.evidence"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/weakness_signals"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "weakness_signals"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.weakness_signals"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "weakness_signals"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.signal"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.evidence"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "weakness_signals"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.signal"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.severity_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.confidence_score"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_signals.evidence"
+          },
+          {
+            "$ref": "#/parameters/body.weakness_signals"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "weakness_signals"
+        ]
+      }
+    },
+    "/weakness_reports": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.report_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.generated_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/weakness_reports"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "weakness_reports"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.weakness_reports"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "weakness_reports"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.report_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.generated_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "weakness_reports"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.report_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.weakness_reports.generated_at"
+          },
+          {
+            "$ref": "#/parameters/body.weakness_reports"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "weakness_reports"
+        ]
+      }
+    },
+    "/question_stats": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.accuracy"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.median_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.p90_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.updated_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/question_stats"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "question_stats"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.question_stats"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "question_stats"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.accuracy"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.median_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.p90_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.updated_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_stats"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.n_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.accuracy"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.median_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.p90_time_ms"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_stats.updated_at"
+          },
+          {
+            "$ref": "#/parameters/body.question_stats"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_stats"
+        ]
+      }
+    },
+    "/sub_concepts": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.sub_concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/sub_concepts"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "sub_concepts"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.sub_concepts"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "sub_concepts"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.sub_concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "sub_concepts"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.sub_concept_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sub_concepts.created_at"
+          },
+          {
+            "$ref": "#/parameters/body.sub_concepts"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "sub_concepts"
+        ]
+      }
+    },
+    "/concept_prerequisites": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.requires_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.relationship_strength"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/concept_prerequisites"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "concept_prerequisites"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.concept_prerequisites"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "concept_prerequisites"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.requires_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.relationship_strength"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concept_prerequisites"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.requires_concept_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.concept_prerequisites.relationship_strength"
+          },
+          {
+            "$ref": "#/parameters/body.concept_prerequisites"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "concept_prerequisites"
+        ]
+      }
+    },
+    "/question_options": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_options.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_label"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.error_type"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/question_options"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "question_options"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.question_options"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "question_options"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_options.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_label"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.error_type"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_options"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.question_options.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.question_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_label"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.option_text"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.question_options.error_type"
+          },
+          {
+            "$ref": "#/parameters/body.question_options"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "question_options"
+        ]
+      }
+    },
+    "/users": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.users.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.grade"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_target"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.class_level"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.early_signal_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_report_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.last_active_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.updated_at"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/users"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.users"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.users.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.grade"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_target"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.class_level"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.early_signal_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_report_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.last_active_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.updated_at"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.users.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_name"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_type"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.grade"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.phone"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.exam_target"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.class_level"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.total_attempts"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.early_signal_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.full_report_ready"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.last_active_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.users.updated_at"
+          },
+          {
+            "$ref": "#/parameters/body.users"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/sessions": {
+      "get": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sessions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.started_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.ended_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.device"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_attempted"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_skipped"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.session_duration_seconds"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.metadata"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/order"
+          },
+          {
+            "$ref": "#/parameters/range"
+          },
+          {
+            "$ref": "#/parameters/rangeUnit"
+          },
+          {
+            "$ref": "#/parameters/offset"
+          },
+          {
+            "$ref": "#/parameters/limit"
+          },
+          {
+            "$ref": "#/parameters/preferCount"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "schema": {
+              "items": {
+                "$ref": "#/definitions/sessions"
+              },
+              "type": "array"
+            }
+          },
+          "206": {
+            "description": "Partial Content"
+          }
+        },
+        "tags": [
+          "sessions"
+        ]
+      },
+      "post": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/body.sessions"
+          },
+          {
+            "$ref": "#/parameters/select"
+          },
+          {
+            "$ref": "#/parameters/preferPost"
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "Created"
+          }
+        },
+        "tags": [
+          "sessions"
+        ]
+      },
+      "delete": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sessions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.started_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.ended_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.device"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_attempted"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_skipped"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.session_duration_seconds"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.metadata"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "sessions"
+        ]
+      },
+      "patch": {
+        "parameters": [
+          {
+            "$ref": "#/parameters/rowFilter.sessions.id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.user_id"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.started_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.ended_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.device"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_attempted"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_correct"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.questions_skipped"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.session_duration_seconds"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.created_at"
+          },
+          {
+            "$ref": "#/parameters/rowFilter.sessions.metadata"
+          },
+          {
+            "$ref": "#/parameters/body.sessions"
+          },
+          {
+            "$ref": "#/parameters/preferReturn"
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          }
+        },
+        "tags": [
+          "sessions"
+        ]
+      }
+    },
+    "/rpc/rls_auto_enable": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) rls_auto_enable"
+        ]
+      }
+    },
+    "/rpc/fn_generate_weakness_report": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "properties": {
+                "p_user_id": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "p_user_id"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) fn_generate_weakness_report"
+        ]
+      }
+    },
+    "/rpc/fn_apply_attempt": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "properties": {
+                "p_attempt_id": {
+                  "format": "bigint",
+                  "type": "integer"
+                }
+              },
+              "required": [
+                "p_attempt_id"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) fn_apply_attempt"
+        ]
+      }
+    },
+    "/rpc/fn_detect_root_flaws": {
+      "post": {
+        "parameters": [
+          {
+            "in": "body",
+            "name": "args",
+            "required": true,
+            "schema": {
+              "properties": {
+                "p_user_id": {
+                  "format": "uuid",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "p_user_id"
+              ],
+              "type": "object"
+            }
+          },
+          {
+            "$ref": "#/parameters/preferParams"
+          }
+        ],
+        "produces": [
+          "application/json",
+          "application/vnd.pgrst.object+json;nulls=stripped",
+          "application/vnd.pgrst.object+json"
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        },
+        "tags": [
+          "(rpc) fn_detect_root_flaws"
+        ]
+      }
+    }
+  },
+  "definitions": {
+    "concepts": {
+      "required": [
+        "id",
+        "concept_name"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "chapter_id": {
+          "description": "Note:\nThis is a Foreign Key to `chapters.id`.<fk table='chapters' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "concept_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questions_backup": {
+      "properties": {
+        "id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "chapter_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "question_text": {
+          "format": "text",
+          "type": "string"
+        },
+        "explanation": {
+          "format": "text",
+          "type": "string"
+        },
+        "difficulty": {
+          "format": "text",
+          "type": "string"
+        },
+        "correct_option": {
+          "format": "text",
+          "type": "string"
+        },
+        "year": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "source": {
+          "format": "text",
+          "type": "string"
+        },
+        "image_url": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "question_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "numerical_answer": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "exam_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "marks": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "negative_marks": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "solution_image_url": {
+          "format": "text",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "question_subconcepts": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "question_id": {
+          "description": "Note:\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "sub_concept_id": {
+          "description": "Note:\nThis is a Foreign Key to `sub_concepts.id`.<fk table='sub_concepts' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "weight": {
+          "format": "numeric",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "attempts": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "question_id": {
+          "description": "Note:\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "session_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "selected_option": {
+          "format": "text",
+          "type": "string"
+        },
+        "is_correct": {
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "time_taken_ms": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "changed_answer_count": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "opened_hint": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "opened_solution": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "attempt_order": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "confidence_rating": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "error_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "numerical_response": {
+          "format": "text",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "questions": {
+      "required": [
+        "id",
+        "question_text"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "chapter_id": {
+          "description": "Note:\nThis is a Foreign Key to `chapters.id`.<fk table='chapters' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "question_text": {
+          "format": "text",
+          "type": "string"
+        },
+        "explanation": {
+          "format": "text",
+          "type": "string"
+        },
+        "difficulty": {
+          "format": "text",
+          "type": "string"
+        },
+        "correct_option": {
+          "format": "text",
+          "type": "string"
+        },
+        "year": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "source": {
+          "format": "text",
+          "type": "string"
+        },
+        "image_url": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "question_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "numerical_answer": {
+          "format": "text",
+          "type": "string"
+        },
+        "exam_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "marks": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "negative_marks": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "solution_image_url": {
+          "format": "text",
+          "type": "string"
+        },
+        "expected_time_ms": {
+          "format": "integer",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "chapters": {
+      "required": [
+        "id",
+        "subject",
+        "chapter_name"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "subject": {
+          "format": "text",
+          "type": "string"
+        },
+        "chapter_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "question_concepts": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "question_id": {
+          "description": "Note:\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "concept_id": {
+          "description": "Note:\nThis is a Foreign Key to `concepts.id`.<fk table='concepts' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "weight": {
+          "format": "numeric",
+          "type": "number"
+        }
+      },
+      "type": "object"
+    },
+    "interaction_events": {
+      "required": [
+        "id",
+        "event_type"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "question_id": {
+          "description": "Note:\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "session_id": {
+          "description": "Note:\nThis is a Foreign Key to `sessions.id`.<fk table='sessions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "event_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "event_data": {
+          "format": "jsonb"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "event_timestamp_ms": {
+          "format": "bigint",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "concept_mastery": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "concept_id": {
+          "description": "Note:\nThis is a Foreign Key to `concepts.id`.<fk table='concepts' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "mastery_score": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "confidence_score": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "updated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "total_attempts": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "total_correct": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "average_time_ms": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "weakness_level": {
+          "format": "integer",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "weakness_signals": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "format": "uuid",
+          "type": "string"
+        },
+        "concept_id": {
+          "description": "Note:\nThis is a Foreign Key to `concepts.id`.<fk table='concepts' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "signal": {
+          "format": "text",
+          "type": "string"
+        },
+        "severity": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "severity_score": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "confidence_score": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "evidence": {
+          "format": "jsonb"
+        }
+      },
+      "type": "object"
+    },
+    "weakness_reports": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "report_text": {
+          "format": "text",
+          "type": "string"
+        },
+        "generated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "question_stats": {
+      "required": [
+        "question_id",
+        "n_attempts",
+        "n_correct",
+        "updated_at"
+      ],
+      "properties": {
+        "question_id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "n_attempts": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "n_correct": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "accuracy": {
+          "format": "numeric",
+          "type": "number"
+        },
+        "median_time_ms": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "p90_time_ms": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "updated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "sub_concepts": {
+      "required": [
+        "id",
+        "sub_concept_name"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "concept_id": {
+          "description": "Note:\nThis is a Foreign Key to `concepts.id`.<fk table='concepts' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "sub_concept_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "concept_prerequisites": {
+      "required": [
+        "id",
+        "concept_id",
+        "requires_concept_id",
+        "relationship_strength"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "concept_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "requires_concept_id": {
+          "format": "bigint",
+          "type": "integer"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "relationship_strength": {
+          "default": 5,
+          "format": "integer",
+          "type": "integer"
+        }
+      },
+      "type": "object"
+    },
+    "question_options": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "question_id": {
+          "description": "Note:\nThis is a Foreign Key to `questions.id`.<fk table='questions' column='id'/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "option_label": {
+          "format": "text",
+          "type": "string"
+        },
+        "option_text": {
+          "format": "text",
+          "type": "string"
+        },
+        "error_type": {
+          "format": "text",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "users": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "full_name": {
+          "format": "text",
+          "type": "string"
+        },
+        "exam_type": {
+          "format": "text",
+          "type": "string"
+        },
+        "grade": {
+          "format": "text",
+          "type": "string"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "phone": {
+          "format": "text",
+          "type": "string"
+        },
+        "exam_target": {
+          "format": "text",
+          "type": "string"
+        },
+        "class_level": {
+          "format": "text",
+          "type": "string"
+        },
+        "total_attempts": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "early_signal_ready": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "full_report_ready": {
+          "default": false,
+          "format": "boolean",
+          "type": "boolean"
+        },
+        "last_active_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "updated_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        }
+      },
+      "type": "object"
+    },
+    "sessions": {
+      "required": [
+        "id"
+      ],
+      "properties": {
+        "id": {
+          "description": "Note:\nThis is a Primary Key.<pk/>",
+          "format": "bigint",
+          "type": "integer"
+        },
+        "user_id": {
+          "description": "Note:\nThis is a Foreign Key to `users.id`.<fk table='users' column='id'/>",
+          "format": "uuid",
+          "type": "string"
+        },
+        "started_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "ended_at": {
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "device": {
+          "format": "text",
+          "type": "string"
+        },
+        "questions_attempted": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "questions_correct": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "questions_skipped": {
+          "default": 0,
+          "format": "integer",
+          "type": "integer"
+        },
+        "session_duration_seconds": {
+          "format": "integer",
+          "type": "integer"
+        },
+        "created_at": {
+          "default": "now()",
+          "format": "timestamp with time zone",
+          "type": "string"
+        },
+        "metadata": {
+          "format": "jsonb"
+        }
+      },
+      "type": "object"
+    }
+  },
+  "parameters": {
+    "preferParams": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "in": "header",
+      "type": "string"
+    },
+    "preferReturn": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "return=representation",
+        "return=minimal",
+        "return=none"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "preferCount": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "count=none"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "preferPost": {
+      "name": "Prefer",
+      "description": "Preference",
+      "required": false,
+      "enum": [
+        "return=representation",
+        "return=minimal",
+        "return=none",
+        "resolution=ignore-duplicates",
+        "resolution=merge-duplicates"
+      ],
+      "in": "header",
+      "type": "string"
+    },
+    "select": {
+      "name": "select",
+      "description": "Filtering Columns",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "on_conflict": {
+      "name": "on_conflict",
+      "description": "On Conflict",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "order": {
+      "name": "order",
+      "description": "Ordering",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "range": {
+      "name": "Range",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "header",
+      "type": "string"
+    },
+    "rangeUnit": {
+      "name": "Range-Unit",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "default": "items",
+      "in": "header",
+      "type": "string"
+    },
+    "offset": {
+      "name": "offset",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "limit": {
+      "name": "limit",
+      "description": "Limiting and Pagination",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.concepts": {
+      "name": "concepts",
+      "description": "concepts",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/concepts"
+      }
+    },
+    "rowFilter.concepts.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concepts.chapter_id": {
+      "name": "chapter_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concepts.concept_name": {
+      "name": "concept_name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concepts.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.questions_backup": {
+      "name": "questions_backup",
+      "description": "questions_backup",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/questions_backup"
+      }
+    },
+    "rowFilter.questions_backup.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.chapter_id": {
+      "name": "chapter_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.question_text": {
+      "name": "question_text",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.explanation": {
+      "name": "explanation",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.difficulty": {
+      "name": "difficulty",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.correct_option": {
+      "name": "correct_option",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.year": {
+      "name": "year",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.source": {
+      "name": "source",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.image_url": {
+      "name": "image_url",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.question_type": {
+      "name": "question_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.numerical_answer": {
+      "name": "numerical_answer",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.exam_type": {
+      "name": "exam_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.marks": {
+      "name": "marks",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.negative_marks": {
+      "name": "negative_marks",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions_backup.solution_image_url": {
+      "name": "solution_image_url",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.question_subconcepts": {
+      "name": "question_subconcepts",
+      "description": "question_subconcepts",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/question_subconcepts"
+      }
+    },
+    "rowFilter.question_subconcepts.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_subconcepts.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_subconcepts.sub_concept_id": {
+      "name": "sub_concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_subconcepts.weight": {
+      "name": "weight",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.attempts": {
+      "name": "attempts",
+      "description": "attempts",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/attempts"
+      }
+    },
+    "rowFilter.attempts.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.session_id": {
+      "name": "session_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.selected_option": {
+      "name": "selected_option",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.is_correct": {
+      "name": "is_correct",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.time_taken_ms": {
+      "name": "time_taken_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.changed_answer_count": {
+      "name": "changed_answer_count",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.opened_hint": {
+      "name": "opened_hint",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.opened_solution": {
+      "name": "opened_solution",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.attempt_order": {
+      "name": "attempt_order",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.confidence_rating": {
+      "name": "confidence_rating",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.error_type": {
+      "name": "error_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.attempts.numerical_response": {
+      "name": "numerical_response",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.questions": {
+      "name": "questions",
+      "description": "questions",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/questions"
+      }
+    },
+    "rowFilter.questions.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.chapter_id": {
+      "name": "chapter_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.question_text": {
+      "name": "question_text",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.explanation": {
+      "name": "explanation",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.difficulty": {
+      "name": "difficulty",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.correct_option": {
+      "name": "correct_option",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.year": {
+      "name": "year",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.source": {
+      "name": "source",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.image_url": {
+      "name": "image_url",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.question_type": {
+      "name": "question_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.numerical_answer": {
+      "name": "numerical_answer",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.exam_type": {
+      "name": "exam_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.marks": {
+      "name": "marks",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.negative_marks": {
+      "name": "negative_marks",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.solution_image_url": {
+      "name": "solution_image_url",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.questions.expected_time_ms": {
+      "name": "expected_time_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.chapters": {
+      "name": "chapters",
+      "description": "chapters",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/chapters"
+      }
+    },
+    "rowFilter.chapters.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.chapters.subject": {
+      "name": "subject",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.chapters.chapter_name": {
+      "name": "chapter_name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.chapters.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.question_concepts": {
+      "name": "question_concepts",
+      "description": "question_concepts",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/question_concepts"
+      }
+    },
+    "rowFilter.question_concepts.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_concepts.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_concepts.concept_id": {
+      "name": "concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_concepts.weight": {
+      "name": "weight",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.interaction_events": {
+      "name": "interaction_events",
+      "description": "interaction_events",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/interaction_events"
+      }
+    },
+    "rowFilter.interaction_events.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.session_id": {
+      "name": "session_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.event_type": {
+      "name": "event_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.event_data": {
+      "name": "event_data",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.interaction_events.event_timestamp_ms": {
+      "name": "event_timestamp_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.concept_mastery": {
+      "name": "concept_mastery",
+      "description": "concept_mastery",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/concept_mastery"
+      }
+    },
+    "rowFilter.concept_mastery.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.concept_id": {
+      "name": "concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.mastery_score": {
+      "name": "mastery_score",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.confidence_score": {
+      "name": "confidence_score",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.updated_at": {
+      "name": "updated_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.total_attempts": {
+      "name": "total_attempts",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.total_correct": {
+      "name": "total_correct",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.average_time_ms": {
+      "name": "average_time_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_mastery.weakness_level": {
+      "name": "weakness_level",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.weakness_signals": {
+      "name": "weakness_signals",
+      "description": "weakness_signals",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/weakness_signals"
+      }
+    },
+    "rowFilter.weakness_signals.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.concept_id": {
+      "name": "concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.signal": {
+      "name": "signal",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.severity": {
+      "name": "severity",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.severity_score": {
+      "name": "severity_score",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.confidence_score": {
+      "name": "confidence_score",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_signals.evidence": {
+      "name": "evidence",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.weakness_reports": {
+      "name": "weakness_reports",
+      "description": "weakness_reports",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/weakness_reports"
+      }
+    },
+    "rowFilter.weakness_reports.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_reports.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_reports.report_text": {
+      "name": "report_text",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.weakness_reports.generated_at": {
+      "name": "generated_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.question_stats": {
+      "name": "question_stats",
+      "description": "question_stats",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/question_stats"
+      }
+    },
+    "rowFilter.question_stats.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.n_attempts": {
+      "name": "n_attempts",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.n_correct": {
+      "name": "n_correct",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.accuracy": {
+      "name": "accuracy",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.median_time_ms": {
+      "name": "median_time_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.p90_time_ms": {
+      "name": "p90_time_ms",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_stats.updated_at": {
+      "name": "updated_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.sub_concepts": {
+      "name": "sub_concepts",
+      "description": "sub_concepts",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/sub_concepts"
+      }
+    },
+    "rowFilter.sub_concepts.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sub_concepts.concept_id": {
+      "name": "concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sub_concepts.sub_concept_name": {
+      "name": "sub_concept_name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sub_concepts.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.concept_prerequisites": {
+      "name": "concept_prerequisites",
+      "description": "concept_prerequisites",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/concept_prerequisites"
+      }
+    },
+    "rowFilter.concept_prerequisites.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_prerequisites.concept_id": {
+      "name": "concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_prerequisites.requires_concept_id": {
+      "name": "requires_concept_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_prerequisites.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.concept_prerequisites.relationship_strength": {
+      "name": "relationship_strength",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.question_options": {
+      "name": "question_options",
+      "description": "question_options",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/question_options"
+      }
+    },
+    "rowFilter.question_options.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_options.question_id": {
+      "name": "question_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_options.option_label": {
+      "name": "option_label",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_options.option_text": {
+      "name": "option_text",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.question_options.error_type": {
+      "name": "error_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.users": {
+      "name": "users",
+      "description": "users",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/users"
+      }
+    },
+    "rowFilter.users.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.full_name": {
+      "name": "full_name",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.exam_type": {
+      "name": "exam_type",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.grade": {
+      "name": "grade",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.phone": {
+      "name": "phone",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.exam_target": {
+      "name": "exam_target",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.class_level": {
+      "name": "class_level",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.total_attempts": {
+      "name": "total_attempts",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.early_signal_ready": {
+      "name": "early_signal_ready",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.full_report_ready": {
+      "name": "full_report_ready",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.last_active_at": {
+      "name": "last_active_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.users.updated_at": {
+      "name": "updated_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "body.sessions": {
+      "name": "sessions",
+      "description": "sessions",
+      "required": false,
+      "in": "body",
+      "schema": {
+        "$ref": "#/definitions/sessions"
+      }
+    },
+    "rowFilter.sessions.id": {
+      "name": "id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.user_id": {
+      "name": "user_id",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.started_at": {
+      "name": "started_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.ended_at": {
+      "name": "ended_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.device": {
+      "name": "device",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.questions_attempted": {
+      "name": "questions_attempted",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.questions_correct": {
+      "name": "questions_correct",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.questions_skipped": {
+      "name": "questions_skipped",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.session_duration_seconds": {
+      "name": "session_duration_seconds",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.created_at": {
+      "name": "created_at",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    },
+    "rowFilter.sessions.metadata": {
+      "name": "metadata",
+      "required": false,
+      "in": "query",
+      "type": "string"
+    }
+  },
+  "externalDocs": {
+    "description": "PostgREST Documentation",
+    "url": "https://postgrest.org/en/v14/references/api.html"
+  }
+}

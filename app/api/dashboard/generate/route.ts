@@ -3,6 +3,7 @@ import { generateObject } from 'ai'
 import { z } from 'zod'
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
+import { auth } from '@clerk/nextjs/server'
 
 // Important to handle longer AI generational response times
 export const maxDuration = 60;
@@ -10,12 +11,13 @@ export const maxDuration = 60;
 export async function POST(req: Request) {
   try {
     // 1. Authenticate Request
-    const supabase = await createClient()
-    const { data: { user }, error: authError } = await supabase.auth.getUser()
+    const { userId } = await auth()
 
-    if (authError || !user) {
+    if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    const supabase = await createClient()
 
     // 2. Extract context payload (Onboarding + Quiz Output)
     const { domain, class: userClass, prepLevel, journey, subjectAnalysis, topicAnalysis } = await req.json()
@@ -124,7 +126,7 @@ export async function POST(req: Request) {
 
     // 4. Secretly save generational output into Supabase
     await supabase.from('ai_roadmaps').insert({
-        user_id: user.id,
+        user_id: userId,
         domain: domain || "Unknown",
         roadmap_data: object
     })

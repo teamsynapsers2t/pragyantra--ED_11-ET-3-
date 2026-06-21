@@ -1,0 +1,29 @@
+Created At: 2026-06-12T16:49:29Z
+Completed At: 2026-06-12T16:49:29Z
+File Path: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/app/dashboard/page.tsx`
+Total Lines: 889
+Total Bytes: 52100
+Showing lines 430 to 450
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+430:               <span className={`w-2.5 h-2.5 rounded-full ${col.dot} inline-block shrink-0`} /> {col.title}
+431:               <span className={`ml-auto text-[10px] border px-2 py-0.5 rounded-full font-bold ${col.badge}`}>{col.topics.length} topics</span>
+432:             </h2>
+433:             <div className="space-y-3">{col.topics.map((r, i) => <TopicCard key={i} r={r} barColor={col.barColor} />)}</div>
+434:           </div>
+435:         ))}
+436:       </div>
+437:     </div>
+438:   );
+439: }
+440: 
+441: export default function Page() {
+442:   const [activeNav, setActiveNav] = useState("dashboard");
+443:   const [sidebarOpen, setSidebarOpen] = useState(true);
+444:   const [subject, setSubject] = useState("All");
+445:   const [difficulty, setDifficulty] = useState("All");
+446:   const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+447:   const fileInputRef = useRef<HTMLInputElement>(null);
+448: 
+449:   // AI DYNAMIC STATE INTEGRATION
+450:   const [microWeakness, setMicroWeakness] = useState<any[]>(defaultMicroWeakness);
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

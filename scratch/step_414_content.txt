@@ -1,0 +1,39 @@
+Created At: 2026-06-12T16:50:38Z
+Completed At: 2026-06-12T16:50:38Z
+File Path: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/app/dashboard/page.tsx`
+Total Lines: 890
+Total Bytes: 52146
+Showing lines 440 to 470
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+440: }
+441: 
+442: export default function Page() {
+443:   const [activeNav, setActiveNav] = useState("dashboard");
+444:   const [sidebarOpen, setSidebarOpen] = useState(true);
+445:   const [subject, setSubject] = useState("All");
+446:   const [difficulty, setDifficulty] = useState("All");
+447:   const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
+448:   const fileInputRef = useRef<HTMLInputElement>(null);
+449: 
+450:   // AI DYNAMIC STATE INTEGRATION
+451:   const [microWeakness, setMicroWeakness] = useState<any[]>(defaultMicroWeakness);
+452:   const [roadmapSteps, setRoadmapSteps] = useState<any[]>(defaultRoadmapSteps);
+453:   const [revisionTopics, setRevisionTopics] = useState<any[]>(defaultRevisionTopics);
+454: 
+455:   const [subjectPerformance, setSubjectPerformance] = useState<any[]>(defaultSubjectPerformance);
+456:   const [studyProgress, setStudyProgress] = useState<any[]>(defaultStudyProgress);
+457:   const [weaknessData, setWeaknessData] = useState<any[]>(defaultWeaknessData);
+458:   const [heatmapTopics, setHeatmapTopics] = useState<any[]>(defaultHeatmapTopics);
+459:   const [actionPlan, setActionPlan] = useState<any[]>(defaultActionPlan);
+460:   const [todayPlan, setTodayPlan] = useState<any[]>(defaultTodayPlan);
+461:   const [kpiStats, setKpiStats] = useState<any[]>(defaultKpiStats);
+462: 
+463:   const [aiGenerating, setAiGenerating] = useState(false);
+464:   const [aiReady, setAiReady] = useState(false);
+465:   const [needsInit, setNeedsInit] = useState(false);
+466:   const [aiError, setAiError] = useState<string | null>(null);
+467: 
+468:   useEffect(() => {
+469:     if (typeof window !== "undefined") {
+470:       const isAIReferred = window.location.search.includes("data=");
+The above content does NOT show the entire file contents. If you need to view any lines of the file which were not shown to complete your task, call this tool again to view those lines.

@@ -1,0 +1,58 @@
+Total length: 87318
+Keyword 'success' match 1:
+' ---\nCreated At: 2026-06-19T03:53:33Z\nCompleted At: 2026-06-19T03:53:36Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tDatabase Connection Error: invalid dsn: invalid connection option "prisma+postgres://localhost:51213/?api_key"\n\n\n\n\n\n===='
+--------------------------------------------------
+Keyword 'success' match 2:
+' ---\nCreated At: 2026-06-19T03:58:35Z\nCompleted At: 2026-06-19T03:58:38Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tDATABASE_URL: prisma+postgres://localhost:51213/?api_key=eyJkYXRhYmFzZVVybCI6InBvc3RncmVzOi8vcG9zdGdyZXM6cG9zdGdyZXNAbG9'
+--------------------------------------------------
+Keyword 'success' match 3:
+'id "d03f2616-c637-4e86-a7d8-81edbc763106/task-218" finished with result:\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\n\n    Prisma is a modern DB toolkit to query, migrate and model your databas'
+--------------------------------------------------
+Keyword 'success' match 4:
+' ---\nCreated At: 2026-06-19T04:00:31Z\nCompleted At: 2026-06-19T04:00:35Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\n\nManage your database schema and lifecycle during development.\n\nUsage\n\n  $ '
+--------------------------------------------------
+Keyword 'success' match 5:
+' ---\nCreated At: 2026-06-19T04:00:37Z\nCompleted At: 2026-06-19T04:00:41Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\n\nExecute native commands to your database\n\nThis command takes as input a da'
+--------------------------------------------------
+Keyword 'success' match 6:
+'utput of the command is connector-specific, and is not meant for returning data, but only to report success or failure.\n\nOn SQL databases, this command takes as input a SQL script.\nThe whole script will be sent as a single command to the database.\n\nT'
+--------------------------------------------------
+Keyword 'success' match 7:
+' updated `DATABASE_URL` back to `.env`. This will allow Prisma CLI to connect to the local database successfully.\n================================================================================\n\n--- LINE 288 (Tool Call: write_to_file) ---\n{\n  "name"'
+--------------------------------------------------
+Keyword 'success' match 8:
+' ---\nCreated At: 2026-06-19T04:06:46Z\nCompleted At: 2026-06-19T04:06:54Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tDATABASE_URL Raw: "prisma+postgres://localhost:51213/?api_key=eyJkYXRhYmFzZVVybCI6InBvc3RncmVzOi8vcG9zdGdyZXM6cG9zdGdyZX'
+--------------------------------------------------
+Keyword 'success' match 9:
+'DATABASE_URL=\\\\\\"{new_db_url}\\\\\\"\\\\\\\\n\')\\\\n        else:\\\\n            f.write(line)\\\\n\\\\nprint(\\\\\\"Successfully restored and updated DATABASE_URL in .env!\\\\\\")\\\\n\\"",\n    "Description": "\\"Write a script to restore original base64 and update only pr'
+--------------------------------------------------
+Keyword 'success' match 10:
+'id "d03f2616-c637-4e86-a7d8-81edbc763106/task-344" finished with result:\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\nFetching latest updates for this subcommand...\nCreate and run a new server '
+--------------------------------------------------
+Keyword 'success' match 11:
+' ---\nCreated At: 2026-06-19T04:13:28Z\nCompleted At: 2026-06-19T04:13:32Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\n name     status       urls \n default  not_running       \n\n┌───────────────'
+--------------------------------------------------
+Keyword 'success' match 12:
+' ---\nCreated At: 2026-06-19T04:14:00Z\nCompleted At: 2026-06-19T04:14:04Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\n name     status       urls \n default  not_running       \n\n\n\n\n============='
+--------------------------------------------------
+Keyword 'success' match 13:
+' ---\nCreated At: 2026-06-19T04:18:21Z\nCompleted At: 2026-06-19T04:18:25Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\tLoaded Prisma config from prisma.config.ts.\n\nPrisma schema loaded from prisma\\schema.prisma.\n\n✔ Generated Prisma Client '
+--------------------------------------------------
+Keyword 'success' match 14:
+' ---\nCreated At: 2026-06-19T04:19:53Z\nCompleted At: 2026-06-19T04:19:56Z\n\n\t\t\t\tThe command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\t<truncated 284 lines>\n\n\n\t\t\t\tThe command completed successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tDATABASE_URL Raw: "prisma+postgres://l'
+--------------------------------------------------
+Keyword 'success' match 15:
+'e command completed successfully.\n\t\t\t\tOutput:\n\t\t\t\t<truncated 284 lines>\n\n\n\t\t\t\tThe command completed successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tDATABASE_URL Raw: "prisma+postgres://localhost:51213/?api_key=eyJkYXRhYmFzZVVybCI6InBvc3RncmVzOi8vcG9zdGdyZXM6cG9zdGdy'
+--------------------------------------------------
+Keyword 'success' match 16:
+'W9uX2xpZmV0aW1lPTAmcG9vbF ...\n\n[transcript.jsonl Line 311] Content Match for postgres://: ... leted successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tLength: 534\n\n\nPadded Length: 536\n\n\nDecoded:\n\n\n{\n\n\n  "databaseUrl": "postgres://postgres:postgres@localhost:51214/templ'
+--------------------------------------------------
+Keyword 'success' match 17:
+'stgres@ ...\n\n[transcript.jsonl Line 315] Content Match for postgres://: ... \t\tThe command completed successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tOriginal Decoded Config: {\n\n\n  "databaseUrl": "postgres://postgres:postgres@localhost:51214/template1?sslmode=disable&'
+--------------------------------------------------
+Keyword 'success' match 18:
+'stgres@ ...\n\n[transcript.jsonl Line 321] Content Match for postgres://: ... \t\tThe command completed successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tOriginal Decoded Config: {\n\n\n  "databaseUrl": "postgres://postgres:postgres@localhost:51603/template1?sslmode=disable&'
+--------------------------------------------------
+Keyword 'success' match 19:
+'stgres@ ...\n\n[transcript.jsonl Line 327] Content Match for postgres://: ... \t\tThe command completed successfully.\n\n\t\t\t\tOutput:\n\n\t\t\t\tOriginal Decoded Config: {\n\n\n  "databaseUrl": "postgres://postgres:postgres@localhost:51603/template1?sslmode=disable\n'
+--------------------------------------------------

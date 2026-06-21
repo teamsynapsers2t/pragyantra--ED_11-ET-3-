@@ -1,0 +1,77 @@
+Created At: 2026-06-12T16:48:37Z
+Completed At: 2026-06-12T16:48:37Z
+File Path: `file:///c:/Users/tumra/Documents/paper-AI/paper-ai/app/dashboard/page.tsx`
+Total Lines: 889
+Total Bytes: 52100
+Showing lines 1 to 800
+The following code has been modified to include a line number before every line, in the format: <line_number>: <original_line>. Please note that any changes targeting the original code should remove the line number, colon, and leading space.
+1: "use client";
+2: 
+3: import { useState, useRef, useEffect } from "react";
+4: import {
+5:   BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend,
+6:   LineChart, Line, ResponsiveContainer,
+7: } from "recharts";
+8: 
+9: const defaultSubjectPerformance = [
+10:   { subject: "Mechanics", mastery: 72, accuracy: 74 },
+11:   { subject: "Electromagn.", mastery: 68, accuracy: 63 },
+12:   { subject: "Inorganic", mastery: 58, accuracy: 65 },
+13:   { subject: "Algebra", mastery: 63, accuracy: 71 },
+14:   { subject: "Geometry", mastery: 65, accuracy: 67 },
+15: ];
+16: 
+17: const defaultStudyProgress = [
+18:   { month: "1 May", mastery: 48, accuracy: 52 },
+19:   { month: "15 May", mastery: 53, accuracy: 56 },
+20:   { month: "1 Jun", mastery: 59, accuracy: 62 },
+21:   { month: "15 Jun", mastery: 63, accuracy: 64 },
+22:   { month: "1 Jul", mastery: 66, accuracy: 68 },
+23:   { month: "17 Jul", mastery: 70, accuracy: 71 },
+24: ];
+25: 
+26: const defaultWeaknessData = [
+27:   { topic: "Electromagnetism", score: 48 },
+28:   { topic: "Geometry", score: 36 },
+29:   { topic: "Thermodynamics", score: 30 },
+30:   { topic: "Calculus", score: 25 },
+31:   { topic: "Algebra", score: 12 },
+32: ];
+33: 
+34: const defaultHeatmapTopics = [
+35:   { label: "Mechanics (9M)", score: 72, col: 1, row: 1 },
+36:   { label: "Thermodynamics (7M)", score: 55, col: 2, row: 1 },
+37:   { label: "Inorganic Chem. (6M)", score: 68, col: 3, row: 1 },
+38:   { label: "Geometry (6M)", score: 64, col: 4, row: 1 },
+39:   { label: "Calculus (7M)", score: 60, col: 2, row: 2 },
+40
+<truncated 45282 bytes>
+div className="text-right">
+757:                         <p className="text-xs font-bold text-orange-500">{revisionTotal - revisionCompleted} remaining</p>
+758:                         <button onClick={() => setActiveNav("revision")} className="mt-1 text-[11px] font-bold text-white bg-orange-500 px-3 py-1 rounded-lg hover:bg-orange-600 transition">View All →</button>
+759:                       </div>
+760:                     </div>
+761:                     <div className="h-2.5 bg-orange-100 rounded-full overflow-hidden mb-4">
+762:                       <div className="h-full bg-orange-500 rounded-full transition-all" style={{ width: `${revisionPct}%` }} />
+763:                     </div>
+764:                     <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wide mb-2">Today's Revision Topics</p>
+765:                     <div className="space-y-2">
+766:                       {todayRevision.map((r, i) => (
+767:                         <div key={i} className="flex items-center justify-between bg-orange-50 rounded-xl px-3 py-2">
+768:                           <div>
+769:                             <p className="text-[13px] font-bold text-gray-800">{r.topic}</p>
+770:                             <p className="text-[10px] text-gray-400">{r.subject}</p>
+771:                           </div>
+772:                           <span className={`px-2 py-0.5 rounded-full text-[10px] ${priorityBadge(r.priority)}`}>{r.priority}</span>
+773:                         </div>
+774:                       ))}
+775:                     </div>
+776:                   </CardShell>
+777: 
+778:                   <CardShell title="Revision by Subject">
+779:                     <div className="space-y-4 pt-1">
+780:                       {["Physics", "Chemistry", "Mathematics"].map((subj) => {
+781:                         const subjTopics = revi
+<truncated 1764 bytes>
+
+NOTE: The output was truncated because it was too long. Use a more targeted query or a smaller range to get the information you need.

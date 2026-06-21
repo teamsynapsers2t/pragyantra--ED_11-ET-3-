@@ -1,0 +1,46 @@
+const { PrismaClient } = require('@prisma/client');
+const fs = require('fs');
+
+// Load environment variables manually
+if (fs.existsSync('.env')) {
+  const envLocal = fs.readFileSync('.env', 'utf-8');
+  envLocal.split('\n').forEach(line => {
+    const parts = line.trim().split('=');
+    if (parts.length === 2) {
+      process.env[parts[0].trim()] = parts[1].trim().replace(/^["']|["']$/g, '');
+    }
+  });
+}
+
+// Also load .env.local if exists
+if (fs.existsSync('.env.local')) {
+  const envLocal = fs.readFileSync('.env.local', 'utf-8');
+  envLocal.split('\n').forEach(line => {
+    const parts = line.trim().split('=');
+    if (parts.length === 2) {
+      process.env[parts[0].trim()] = parts[1].trim().replace(/^["']|["']$/g, '');
+    }
+  });
+}
+
+const prisma = new PrismaClient();
+
+async function main() {
+  console.log("--- Querying using Prisma Client ---");
+  try {
+    const res = await prisma.$queryRawUnsafe(`
+      SELECT p.proname, pg_get_functiondef(p.oid) as definition
+      FROM pg_proc p
+      JOIN pg_namespace n ON p.pronamespace = n.oid
+      WHERE n.nspname = 'public' AND p.proname IN ('fn_detect_root_flaws', 'fn_generate_weakness_report');
+    `);
+    for (const r of res) {
+      console.log(`\n=========================================\nFunction ${r.proname}:\n=========================================`);
+      console.log(r.definition);
+    }
+  } catch (err) {
+    console.error("Error querying function definitions:", err);
+  }
+}
+
+main().catch(console.error).finally(() => prisma.$disconnect());

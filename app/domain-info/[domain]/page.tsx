@@ -10,7 +10,7 @@ const domainData = {
     title: "Joint Entrance Examination (JEE)",
     shortName: "JEE",
     description: "The gateway to India's premier engineering institutes like IITs, NITs, and IIITs.",
-    subjects: ["Physics", "Chemistry", "Mathematics"],
+    subjects: ["Physics"],
     highlights: [
       "Tests analytical and problem-solving skills",
       "Two stages: JEE Main and JEE Advanced",
@@ -29,7 +29,7 @@ const domainData = {
     title: "National Eligibility cum Entrance Test (NEET)",
     shortName: "NEET",
     description: "The single national level medical entrance exam for admission to MBBS and BDS courses in India.",
-    subjects: ["Physics", "Chemistry", "Biology (Botany & Zoology)"],
+    subjects: ["Physics"],
     highlights: [
       "Tests conceptual clarity and memory",
       "Single stage objective exam",

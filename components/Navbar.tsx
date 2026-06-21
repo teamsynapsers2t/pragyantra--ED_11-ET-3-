@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { Show, UserButton } from "@clerk/nextjs";
 
 export default function Navbar() {
   return (
@@ -8,17 +11,25 @@ export default function Navbar() {
       <div className="hidden md:flex gap-8 text-gray-700">
         <a href="#">Features</a>
         <a href="#">How it works</a>
-        <a href="#">Dashboard</a>
+        <Link href="/dashboard" className="hover:text-orange-500 transition">Dashboard</Link>
         <a href="#">Pricing</a>
       </div>
 
-      <div className="flex gap-4">
-        <Link href="/sign-in" className="text-gray-700 hover:text-orange-500 font-medium transition pt-2">
-          Log in
-        </Link>
-        <Link href="/sign-up" className="bg-orange-500 text-white px-5 py-2 hover:bg-orange-600 font-medium rounded-lg shadow-md transition">
-          Sign up →
-        </Link>
+      <div className="flex items-center gap-4">
+        <Show when="signed-out">
+          <Link href="/sign-in" className="text-gray-700 hover:text-orange-500 font-medium transition">
+            Log in
+          </Link>
+          <Link href="/sign-up" className="bg-orange-500 text-white px-5 py-2 hover:bg-orange-600 font-medium rounded-lg shadow-md transition">
+            Sign up →
+          </Link>
+        </Show>
+        <Show when="signed-in">
+          <Link href="/dashboard" className="text-gray-700 hover:text-orange-500 font-medium transition">
+            Dashboard
+          </Link>
+          <UserButton />
+        </Show>
       </div>
     </nav>
   );

@@ -1,0 +1,30 @@
+[
+  {
+    "db_id": 1,
+    "matched_local_id": null,
+    "question_text": "A vector has magnitude same as that of \n→\nA\n=\n3\nˆ\nj\n+\n4\nˆ\nj\n and is parallel to \n→\nB\n=\n4\nˆ\ni\n+\n3\nˆ\nj\n. The \nx\n and \ny\n c"
+  },
+  {
+    "db_id": 2,
+    "matched_local_id": null,
+    "question_text": "Two vectors \n→\nX\n and \n→\nY\n have equal magnitude. The magnitude of \n(\n→\nX\n−\n→\nY\n)\n is \nn\n times the magnitude of \n(\n→\nX\n"
+  },
+  {
+    "db_id": 3,
+    "matched_local_id": null,
+    "question_text": "A particle is moving with a velocity \n→\nv\n=\nK\n(\ny\nˆ\ni\n+\nx\nˆ\nj\n)\n,\n where \nK\n is a constant.\n\nThe general equation for it"
+  },
+  {
+    "db_id": 4,
+    "matched_local_id": "m6srn0cc",
+    "original_subject": "Physics",
+    "original_chapter": "vector-algebra",
+    "original_topic": "dot-product-and-cross-product",
+    "question_text": "Two particles are located at equal distance from origin. The position vectors of those are represented by \n¯\nA\n=\n2\n^\ni\n+"
+  },
+  {
+    "db_id": 5,
+    "matched_local_id": null,
+    "question_text": "The resultant of two vectors \n→\nA\n and \n→\nB\n is perpendicular to \n→\nA\n and its magnitude is half that of \n→\nB\n. The angl"
+  }
+]
