@@ -240,7 +240,24 @@ export default function Home() {
     }
 
     var cleanup = init();
-    return cleanup;
+
+    // ── bfcache / back-forward restoration guard ──────────────────────────
+    // When the browser restores this page from its back-forward cache,
+    // React effects do NOT re-run and the imperative parallax styles stay
+    // frozen at whatever opacity/transform they last held — leaving the hero
+    // blank and the nav profile button unrendered. event.persisted === true
+    // means we were served from bfcache, so force a clean reload to rebuild
+    // a fresh, correct DOM state. This is production-safe (only fires on
+    // actual bfcache restores, never on first load or normal scroll).
+    function onPageShow(e: PageTransitionEvent) {
+      if (e.persisted) { window.location.reload(); }
+    }
+    window.addEventListener('pageshow', onPageShow);
+
+    return function () {
+      if (typeof cleanup === 'function') cleanup();
+      window.removeEventListener('pageshow', onPageShow);
+    };
   }, []);
 
   const bubbles = [
