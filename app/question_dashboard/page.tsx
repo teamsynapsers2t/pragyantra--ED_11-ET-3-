@@ -449,83 +449,188 @@ function QuestionListView({
     return qs;
   })();
 
-  const DARK_BG   = "#090d16";
-  const DARK_CARD = "#0d1527";
-  const DARK_LINE = "#1e293b";
+  // ── Energy background canvas ─────────────────────────────────────────────
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
+    const ctx = canvas.getContext("2d")!;
+    const cv = canvas as HTMLCanvasElement;
+    let raf: number;
+    let W = 0, H = 0, curves: any[] = [], particles: any[] = [], lastT = 0;
+    const R = 224, G = 105, B = 38;
+
+    function lerp(a: number, b: number, t: number) { return a + (b - a) * t; }
+
+    function makeArc(cx: number, cy: number, r: number, op: number, lw: number) {
+      const d0 = r*r - cy*cy;
+      if (d0 < 0) return null;
+      const xTop = cx - Math.sqrt(d0);
+      if (xTop > W + 50 || xTop < -50) return null;
+      const angStart = Math.atan2(-cy, xTop - cx);
+      const dr = r*r - (W - cx)*(W - cx);
+      let angEnd: number | null = null;
+      if (dr >= 0) {
+        const yR = cy + Math.sqrt(dr);
+        if (yR >= -20 && yR <= H + 20) angEnd = Math.atan2(yR - cy, W - cx);
+      }
+      if (angEnd === null) {
+        const db = r*r - (H - cy)*(H - cy);
+        if (db < 0) return null;
+        const xB = cx - Math.sqrt(db);
+        if (xB < -20 || xB > W + 20) return null;
+        angEnd = Math.atan2(H - cy, xB - cx);
+      }
+      return { type:"arc", cx, cy, r, as: angStart, ae: angEnd, op, lw,
+        pt(t: number) { const a = angStart + (angEnd! - angStart)*t; return { x: cx+r*Math.cos(a), y: cy+r*Math.sin(a) }; } };
+    }
+
+    function makeBez(p: number[], op: number, lw: number) {
+      return { type:"bz", p, op, lw,
+        pt(t: number) { const m=1-t; return { x: m*m*m*p[0]+3*m*m*t*p[2]+3*m*t*t*p[4]+t*t*t*p[6], y: m*m*m*p[1]+3*m*m*t*p[3]+3*m*t*t*p[5]+t*t*t*p[7] }; } };
+    }
+
+    function setup() {
+      const dpr = Math.min(window.devicePixelRatio||1, 2);
+      W = window.innerWidth; H = window.innerHeight;
+      cv.width = W*dpr; cv.height = H*dpr;
+      cv.style.width = W+"px"; cv.style.height = H+"px";
+      ctx.setTransform(1,0,0,1,0,0); ctx.scale(dpr, dpr);
+      const CX = W*1.011, CY = H*-0.444;
+      curves = [];
+      [[0.430,0.038,0.50],[0.497,0.068,0.82],[0.560,0.052,0.66],[0.625,0.036,0.52],[0.700,0.024,0.42]]
+        .forEach(([rf,op,lw]) => { const a = makeArc(CX,CY,rf*W,op,lw); if (a) curves.push(a); });
+      curves.push(makeBez([W*-.03,H*.27,W*.08,H*.41,W*.11,H*.57,W*.01,H*.77], 0.052, 0.65));
+      curves.push(makeBez([W*-.06,H*.20,W*.04,H*.35,W*.08,H*.53,W*-.03,H*.72], 0.034, 0.48));
+      curves.push(makeBez([W*.80,H*1.06,W*.93,H*.88,W*1.05,H*.79,W*1.10,H*.68], 0.026, 0.44));
+      particles = [];
+      [[1,5],[2,4],[3,3],[0,2],[4,2],[5,3],[6,2]].forEach(([ci,cnt]) => {
+        const c = curves[ci]; if (!c) return;
+        for (let i=0; i<cnt; i++) particles.push({ c, t: Math.random(), spd: lerp(0.000045,0.000110,Math.random()), r: lerp(1.7,3.2,Math.random()), op: lerp(0.42,0.84,Math.random()) });
+      });
+    }
+
+    function tick(ts: number) {
+      raf = requestAnimationFrame(tick);
+      const dt = lastT ? Math.min(ts-lastT, 50) : 16; lastT = ts;
+      ctx.clearRect(0,0,W,H); ctx.fillStyle="#ffffff"; ctx.fillRect(0,0,W,H);
+      curves.forEach(c => {
+        ctx.save(); ctx.lineCap="round"; ctx.beginPath();
+        if (c.type==="arc") ctx.arc(c.cx,c.cy,c.r,c.as,c.ae,true);
+        else { ctx.moveTo(c.p[0],c.p[1]); ctx.bezierCurveTo(c.p[2],c.p[3],c.p[4],c.p[5],c.p[6],c.p[7]); }
+        ctx.lineWidth=c.lw*7; ctx.strokeStyle=`rgba(${R},${G},${B},${c.op*0.08})`; ctx.stroke();
+        ctx.lineWidth=c.lw*3; ctx.strokeStyle=`rgba(${R},${G},${B},${c.op*0.22})`; ctx.stroke();
+        ctx.lineWidth=c.lw;   ctx.strokeStyle=`rgba(${R},${G},${B},${c.op})`; ctx.stroke();
+        ctx.restore();
+      });
+      particles.forEach(p => {
+        p.t = (p.t + p.spd*dt) % 1;
+        const pos = p.c.pt(p.t);
+        if (pos.x < -8||pos.x > W+8||pos.y < -8||pos.y > H+8) return;
+        ctx.save(); ctx.shadowColor=`rgba(${R},${G},${B},0.8)`; ctx.shadowBlur=8;
+        ctx.fillStyle=`rgba(${R},${G},${B},${p.op})`; ctx.beginPath(); ctx.arc(pos.x,pos.y,p.r,0,Math.PI*2); ctx.fill(); ctx.restore();
+      });
+    }
+
+    setup();
+    raf = requestAnimationFrame(tick);
+    const onResize = () => { cancelAnimationFrame(raf); lastT=0; setup(); raf = requestAnimationFrame(tick); };
+    window.addEventListener("resize", onResize);
+    return () => { cancelAnimationFrame(raf); window.removeEventListener("resize", onResize); };
+  }, []);
+
+  // ── Difficulty color (light theme) ───────────────────────────────────────
+  function diffColor(d: string) {
+    const l = (d||"").toLowerCase();
+    if (l === "hard" || l === "expert") return "#ef4444";
+    if (l === "easy") return "#16a34a";
+    return "#d97706";
+  }
 
   return (
-    <div style={{ minHeight: "100vh", background: DARK_BG, color: "#e2e8f0", fontFamily: T.font }}>
-      {/* Header */}
-      <header style={{ height: 52, background: DARK_CARD, borderBottom: `1px solid ${DARK_LINE}`, display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", position: "sticky", top: 0, zIndex: 10 }}>
-        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-          <button onClick={onBack} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back
-          </button>
-          <span style={{ color: DARK_LINE }}>|</span>
-          <span style={{ fontSize: 12, color: T.brand500, fontWeight: 700 }}>{subject}</span>
-          {chapter && <><span style={{ color: "#334155", fontSize: 12 }}>/</span><span style={{ fontSize: 12, color: "#ccc" }}>{chapter}</span></>}
-          {topic   && <><span style={{ color: "#334155", fontSize: 12 }}>/</span><span style={{ fontSize: 12, color: "#fff", fontWeight: 700 }}>{clean(topic)}</span></>}
-        </div>
-        <span style={{ fontSize: 10, color: "#999", background: "#16223f", border: `1px solid ${DARK_LINE}`, padding: "3px 10px", borderRadius: 6 }}>🎓 {exam.toUpperCase()}</span>
-      </header>
+    <div style={{ minHeight: "100vh", background: "#ffffff", color: "#111", fontFamily: T.font, position: "relative" }}>
+      {/* Animated energy canvas */}
+      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />
 
-      <div style={{ maxWidth: 860, margin: "0 auto", padding: "28px 20px 80px" }}>
-        {/* Title + search */}
-        <div style={{ marginBottom: 20 }}>
-          <h2 style={{ fontSize: 22, fontWeight: 800, color: "#fff", margin: "0 0 4px" }}>
-            {topic ? `${clean(topic)} — Questions` : chapter ? `${chapter} — All Questions` : `${subject} — All Questions`}
-          </h2>
-          {!loading && <p style={{ fontSize: 13, color: "#666", margin: "0 0 16px" }}>{questions.length} questions · click any to start practice from there</p>}
-          <input
-            value={search} onChange={e => setSearch(e.target.value)}
-            placeholder="Search questions or filter by year…"
-            style={{ width: "100%", boxSizing: "border-box", padding: "11px 16px", borderRadius: 14, border: `1.5px solid ${DARK_LINE}`, background: "#111a2f", color: "#fff", fontSize: 14, outline: "none" }}
-          />
-        </div>
+      {/* All content sits above the canvas */}
+      <div style={{ position: "relative", zIndex: 1 }}>
+        {/* Header */}
+        <header style={{ height: 54, background: "rgba(255,255,255,0.88)", backdropFilter: "blur(14px)", WebkitBackdropFilter: "blur(14px)", borderBottom: "1px solid rgba(224,122,56,0.13)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px", position: "sticky", top: 0, zIndex: 10 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+            <button onClick={onBack} style={{ background: "none", border: "none", color: "#888", cursor: "pointer", fontSize: 12, fontWeight: 700, display: "flex", alignItems: "center", gap: 5 }}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back
+            </button>
+            <span style={{ color: "#e0e0e0" }}>|</span>
+            <span style={{ fontSize: 12, color: "#E07A38", fontWeight: 700 }}>{subject}</span>
+            {chapter && <><span style={{ color: "#ccc", fontSize: 12 }}>/</span><span style={{ fontSize: 12, color: "#555" }}>{chapter}</span></>}
+            {topic   && <><span style={{ color: "#ccc", fontSize: 12 }}>/</span><span style={{ fontSize: 12, color: "#111", fontWeight: 700 }}>{clean(topic)}</span></>}
+          </div>
+          <span style={{ fontSize: 10, color: "#E07A38", background: "rgba(224,122,56,0.09)", border: "1px solid rgba(224,122,56,0.2)", padding: "3px 10px", borderRadius: 6, fontWeight: 700 }}>🎓 {exam.toUpperCase()}</span>
+        </header>
 
-        {loading ? (
-          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 60 }}>
-            <div style={{ width: 38, height: 38, border: `4px solid ${T.brand500}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
-            <p style={{ color: "#666", fontSize: 13 }}>Loading questions…</p>
+        <div style={{ maxWidth: 860, margin: "0 auto", padding: "36px 20px 100px" }}>
+          {/* Title */}
+          <div style={{ marginBottom: 24 }}>
+            <h2 style={{ fontSize: 28, fontWeight: 700, color: "#111", letterSpacing: -0.5, margin: "0 0 4px" }}>
+              {topic ? clean(topic) : chapter || subject}
+            </h2>
+            {!loading && (
+              <p style={{ fontSize: 14, color: "#999", margin: "0 0 18px" }}>
+                {filtered.length} question{filtered.length !== 1 ? "s" : ""}{filterYears && filterYears.length > 0 || filterDifficulty && filterDifficulty.length > 0 ? " (filtered)" : " · click any to start practice"}
+              </p>
+            )}
+            <input
+              value={search} onChange={e => setSearch(e.target.value)}
+              placeholder="Search questions or filter by year…"
+              style={{ width: "100%", boxSizing: "border-box", padding: "11px 16px", borderRadius: 14, border: "1.5px solid #f0f0f0", background: "rgba(255,255,255,0.9)", color: "#111", fontSize: 14, outline: "none", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+            />
           </div>
-        ) : filtered.length === 0 ? (
-          <div style={{ textAlign: "center", paddingTop: 60 }}>
-            <p style={{ fontSize: 36, marginBottom: 10 }}>🔍</p>
-            <p style={{ color: "#666", fontSize: 14 }}>{search ? "No questions match your search." : "No questions found."}</p>
-          </div>
-        ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
-            {filtered.map((q, idx) => {
-              // find original index for startAt
-              const origIdx = questions.indexOf(q);
-              return (
-                <button
-                  key={q.id}
-                  onClick={() => onSelectQuestion(origIdx)}
-                  style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "14px 18px", borderRadius: 16, background: DARK_CARD, border: `1px solid ${DARK_LINE}`, cursor: "pointer", textAlign: "left", width: "100%", transition: "border-color .15s, background .15s" }}
-                  onMouseEnter={e => { e.currentTarget.style.borderColor = T.brand500; e.currentTarget.style.background = "#111a2f"; }}
-                  onMouseLeave={e => { e.currentTarget.style.borderColor = DARK_LINE; e.currentTarget.style.background = DARK_CARD; }}>
-                  {/* Index badge */}
-                  <span style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 10, background: "#16223f", border: `1px solid ${DARK_LINE}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: T.brand500 }}>{origIdx + 1}</span>
-                  {/* Content */}
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7, flexWrap: "wrap" }}>
-                      {q.year && <span style={{ fontSize: 10, fontWeight: 700, background: "#16223f", color: "#aaa", border: `1px solid ${DARK_LINE}`, padding: "2px 8px", borderRadius: 5 }}>{q.exam?.toUpperCase()} {q.year}</span>}
-                      {q.difficulty && <span style={{ fontSize: 10, fontWeight: 700, background: "#16223f", color: q.difficulty === "Hard" ? "#f43f5e" : q.difficulty === "Easy" ? "#22c55e" : "#f59e0b", border: `1px solid ${DARK_LINE}`, padding: "2px 8px", borderRadius: 5 }}>{q.difficulty}</span>}
-                      {q.topic && <span style={{ fontSize: 10, color: "#666", background: "#16223f", border: `1px solid ${DARK_LINE}`, padding: "2px 8px", borderRadius: 5 }}>{clean(q.topic)}</span>}
+
+          {loading ? (
+            <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 14, paddingTop: 80 }}>
+              <div style={{ width: 38, height: 38, border: "4px solid #E07A38", borderTopColor: "transparent", borderRadius: "50%", animation: "spin .8s linear infinite" }} />
+              <p style={{ color: "#999", fontSize: 13 }}>Loading questions…</p>
+            </div>
+          ) : filtered.length === 0 ? (
+            <div style={{ textAlign: "center", paddingTop: 80 }}>
+              <p style={{ fontSize: 40, marginBottom: 10 }}>🔍</p>
+              <p style={{ color: "#888", fontSize: 15, fontWeight: 600 }}>{search ? "No questions match your search." : "No questions found for these filters."}</p>
+              <p style={{ color: "#bbb", fontSize: 13, marginTop: 6 }}>Try adjusting your year or difficulty filters.</p>
+            </div>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+              {filtered.map((q) => {
+                const origIdx = questions.indexOf(q);
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => onSelectQuestion(origIdx)}
+                    style={{ display: "flex", alignItems: "flex-start", gap: 14, padding: "16px 20px", borderRadius: 14, background: "#fff", border: "1px solid #f0f0f0", cursor: "pointer", textAlign: "left", width: "100%", transition: "box-shadow .15s, border-color .15s", boxShadow: "0 1px 4px rgba(0,0,0,.05)" }}
+                    onMouseEnter={e => { e.currentTarget.style.borderColor = "#E07A38"; e.currentTarget.style.boxShadow = "0 4px 16px rgba(224,122,56,0.15)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.borderColor = "#f0f0f0"; e.currentTarget.style.boxShadow = "0 1px 4px rgba(0,0,0,.05)"; }}>
+                    {/* Index badge */}
+                    <span style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 10, background: "rgba(224,122,56,0.08)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12, fontWeight: 800, color: "#E07A38" }}>{origIdx + 1}</span>
+                    {/* Content */}
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 7, flexWrap: "wrap" }}>
+                        {q.year && <span style={{ fontSize: 11, fontWeight: 600, color: "#E07A38" }}>{q.exam?.toUpperCase()} {q.year}</span>}
+                        {q.difficulty && <span style={{ fontSize: 10, fontWeight: 700, color: diffColor(q.difficulty), background: `${diffColor(q.difficulty)}12`, border: `1px solid ${diffColor(q.difficulty)}33`, padding: "2px 8px", borderRadius: 5 }}>{q.difficulty}</span>}
+                        {q.topic && <span style={{ fontSize: 10, color: "#999", background: "#f5f5f5", border: "1px solid #eee", padding: "2px 8px", borderRadius: 5 }}>{clean(q.topic)}</span>}
+                      </div>
+                      <div
+                        style={{ fontSize: 13.5, color: "#333", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
+                        dangerouslySetInnerHTML={{ __html: q.question }}
+                      />
                     </div>
-                    <div
-                      style={{ fontSize: 13.5, color: "#cbd5e1", lineHeight: 1.55, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-                      dangerouslySetInnerHTML={{ __html: q.question }}
-                    />
-                  </div>
-                  {/* Arrow */}
-                  <svg style={{ flexShrink: 0, marginTop: 6 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#444" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
-                </button>
-              );
-            })}
-          </div>
-        )}
+                    {/* Arrow */}
+                    <svg style={{ flexShrink: 0, marginTop: 6 }} width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#ccc" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
       </div>
       <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
     </div>
