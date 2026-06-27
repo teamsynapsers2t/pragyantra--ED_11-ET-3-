@@ -403,10 +403,15 @@ function PracticeEndEffect({ sessionId, answers }: { sessionId: string | null; a
 function QuestionListView({
   subject, chapter, topic, exam,
   onSelectQuestion, onBack,
+  filterSort, filterYears, filterDifficulty,
 }: {
   subject: string; chapter: string | null; topic: string | null; exam: string;
   onSelectQuestion: (startAt: number) => void;
   onBack: () => void;
+  filterSort?: "newest"|"oldest";
+  filterYears?: number[];
+  filterDifficulty?: string[];
+  filterLevel?: string;
 }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -423,9 +428,25 @@ function QuestionListView({
       .finally(() => setLoading(false));
   }, [subject, chapter, topic]);
 
-  const filtered = search.trim()
-    ? questions.filter(q => q.question?.toLowerCase().includes(search.toLowerCase()) || String(q.year).includes(search))
-    : questions;
+  const filtered = (() => {
+    let qs = [...questions];
+    if (search.trim()) {
+      const s = search.toLowerCase();
+      qs = qs.filter(q => q.question?.toLowerCase().includes(s) || String(q.year).includes(s));
+    }
+    if (filterYears && filterYears.length > 0) {
+      qs = qs.filter(q => filterYears.includes(Number(q.year)));
+    }
+    if (filterDifficulty && filterDifficulty.length > 0) {
+      qs = qs.filter(q => filterDifficulty.includes(q.difficulty || ""));
+    }
+    if (filterSort === "oldest") {
+      qs = [...qs].sort((a, b) => Number(a.year) - Number(b.year));
+    } else {
+      qs = [...qs].sort((a, b) => Number(b.year) - Number(a.year));
+    }
+    return qs;
+  })();
 
   const DARK_BG   = "#090d16";
   const DARK_CARD = "#0d1527";
@@ -978,6 +999,10 @@ function ExamSelect({ streakDays, onSelect }: { streakDays: number; onSelect: (e
 function AppShell({
   exam, streakDays, attemptsCount, accuracy, timeStr, loadingStats,
   onPractice, onShowList, bookmarks, onToggleBookmark, onExamChange,
+  filterSort, onFilterSortChange,
+  filterYears, onFilterYearsChange,
+  filterDifficulty, onFilterDifficultyChange,
+  filterLevel, onFilterLevelChange,
 }: {
   exam: string;
   streakDays: number; attemptsCount: number; accuracy: number; timeStr: string; loadingStats: boolean;
@@ -986,6 +1011,14 @@ function AppShell({
   bookmarks: Record<string, Question>;
   onToggleBookmark: (q: Question) => void;
   onExamChange: (e: string) => void;
+  filterSort: "newest"|"oldest";
+  onFilterSortChange: (v: "newest"|"oldest") => void;
+  filterYears: number[];
+  onFilterYearsChange: (v: number[]) => void;
+  filterDifficulty: string[];
+  onFilterDifficultyChange: (v: string[]) => void;
+  filterLevel: string;
+  onFilterLevelChange: (v: string) => void;
 }) {
   const router = useRouter();
   const { user, isLoaded } = useUser();
@@ -1005,6 +1038,12 @@ function AppShell({
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hasNewAnalysis, setHasNewAnalysis] = useState(false);
   const [showNotifPopup, setShowNotifPopup] = useState(false);
+
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingSort, setPendingSort] = useState<"newest"|"oldest">(filterSort);
+  const [pendingYears, setPendingYears] = useState<number[]>(filterYears);
+  const [pendingDifficulty, setPendingDifficulty] = useState<string[]>(filterDifficulty);
+  const [pendingLevel, setPendingLevel] = useState<string>(filterLevel);
 
   useEffect(() => {
     setLoadingChapters(true); setShowAll(false); setSelectedChapter(null); setPyqType("all");
@@ -1097,8 +1136,8 @@ function AppShell({
           </button>
         </div>
 
-        {/* Subject tabs */}
-        <div style={{ display: "flex", gap: 10, marginTop: 22 }}>
+        {/* Subject tabs + Filter button */}
+        <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
           {subjects.map(s => {
             const active = s === activeSubject;
             return (
@@ -1108,6 +1147,17 @@ function AppShell({
               </button>
             );
           })}
+          <button
+            onClick={() => { setPendingSort(filterSort); setPendingYears(filterYears); setPendingDifficulty(filterDifficulty); setPendingLevel(filterLevel); setFilterOpen(true); }}
+            style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 14, cursor: "pointer", fontWeight: 700, fontSize: 14, background: (filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? T.brandGrad : T.surface, border: `1px solid ${(filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? "transparent" : T.line}`, color: (filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? "#fff" : T.ink, transition: "all .25s", position: "relative", marginLeft: "auto", flexShrink: 0 }}>
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+            Filters
+            {(filterYears.length + filterDifficulty.length + (filterLevel ? 1 : 0)) > 0 && (
+              <span style={{ position: "absolute", top: -7, right: -7, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 999, background: "#fff", color: T.brand500, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${T.brand500}` }}>
+                {filterYears.length + filterDifficulty.length + (filterLevel ? 1 : 0)}
+              </span>
+            )}
+          </button>
         </div>
 
         {/* Chapters */}
@@ -1415,15 +1465,131 @@ function AppShell({
           {renderMain()}
         </div>
 
-        {/* FAB — only on Home */}
-        {activeNav === "Home" && (
-          <div style={{ position: "fixed", bottom: 34, right: 34, display: "flex", alignItems: "center", gap: 9, background: T.brandGrad, color: "#fff", fontWeight: 700, fontSize: 15, borderRadius: 16, padding: "14px 22px", cursor: "pointer", boxShadow: "0 12px 30px rgba(255,107,0,.4)", zIndex: 30 }}>
-            <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-            Filters
-            <span style={{ position: "absolute", top: -9, right: -9, minWidth: 22, height: 22, padding: "0 5px", borderRadius: 999, background: "#fff", color: T.brand500, fontSize: 12, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${T.brand500}` }}>3</span>
-          </div>
-        )}
       </main>
+
+      {/* Filter overlay + drawer */}
+      {filterOpen && (
+        <>
+          <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.45)", backdropFilter: "blur(2px)", zIndex: 70 }} />
+          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 380, maxWidth: "100vw", background: "#fff", zIndex: 80, boxShadow: "-8px 0 40px rgba(40,20,0,0.18)", display: "flex", flexDirection: "column", fontFamily: T.font }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px 16px", borderBottom: `1px solid ${T.line}` }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: T.ink }}>Filters</span>
+              <button onClick={() => setFilterOpen(false)} style={{ width: 36, height: 36, borderRadius: 12, border: `1px solid ${T.line}`, background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.muted }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+
+              {/* Sort By */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Sort By</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {(["newest", "oldest"] as const).map(s => (
+                    <button key={s} onClick={() => setPendingSort(s)}
+                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 14px", borderRadius: 14, border: `1.5px solid ${pendingSort === s ? T.brand500 : T.line}`, background: pendingSort === s ? T.brandGrad : "#fff", color: pendingSort === s ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">{s === "newest" ? <path d="M12 5v14M5 12l7 7 7-7"/> : <path d="M12 19V5M5 12l7-7 7 7"/>}</svg>
+                      {s === "newest" ? "Newest to Oldest" : "Oldest to Newest"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Year Filter */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Year Filter</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {[2026,2025,2024,2023,2022,2021,2020,2019,2018,2017,2016,2015].map(y => {
+                    const on = pendingYears.includes(y);
+                    return (
+                      <button key={y} onClick={() => setPendingYears(on ? pendingYears.filter(x => x !== y) : [...pendingYears, y])}
+                        style={{ padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${on ? T.brand500 : T.line}`, background: on ? T.brandGrad : "#fff", color: on ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                        {y}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  {[["Last 5 Years", 5], ["Last 10 Years", 10], ["All Years", 0]].map(([label, n]) => (
+                    <button key={label as string} onClick={() => {
+                      if (n === 0) { setPendingYears([]); }
+                      else { const cur = new Date().getFullYear(); setPendingYears(Array.from({length: n as number}, (_, i) => cur - i)); }
+                    }}
+                      style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Student Level */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Student Level</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "Beginner", icon: "🌱", diff: "Easy" },
+                    { label: "Intermediate", icon: "🔥", diff: "Medium" },
+                    { label: "Advanced", icon: "👑", diff: "Hard" },
+                  ].map(lv => {
+                    const on = pendingLevel === lv.label;
+                    return (
+                      <button key={lv.label} onClick={() => { setPendingLevel(on ? "" : lv.label); if (!on) setPendingDifficulty([lv.diff]); else setPendingDifficulty([]); }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 10px", borderRadius: 16, border: `2px solid ${on ? T.brand500 : T.line}`, background: on ? "#FFF5EC" : "#fff", cursor: "pointer" }}>
+                        <span style={{ fontSize: 26 }}>{lv.icon}</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: on ? T.brand500 : T.ink }}>{lv.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Difficulty Level */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Difficulty Level</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+                  {[
+                    { label: "Easy", color: "#22c55e", bars: [1,1,0,0] },
+                    { label: "Medium", color: "#f59e0b", bars: [1,1,1,0] },
+                    { label: "Hard", color: "#ef4444", bars: [1,1,1,1] },
+                    { label: "Expert", color: "#7c3aed", bars: [1,1,1,1] },
+                  ].map(d => {
+                    const on = pendingDifficulty.includes(d.label);
+                    return (
+                      <button key={d.label} onClick={() => { setPendingDifficulty(on ? pendingDifficulty.filter(x => x !== d.label) : [...pendingDifficulty, d.label]); setPendingLevel(""); }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 8px", borderRadius: 14, border: `2px solid ${on ? d.color : T.line}`, background: on ? `${d.color}15` : "#fff", cursor: "pointer" }}>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+                          {d.bars.map((h, i) => <div key={i} style={{ width: 4, height: 6 + i * 4, borderRadius: 2, background: on ? d.color : (i < (d.label === "Easy" ? 2 : d.label === "Medium" ? 3 : 4) ? d.color : T.line) }} />)}
+                        </div>
+                        <span style={{ fontWeight: 700, fontSize: 12, color: on ? d.color : T.ink }}>{d.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+            </div>
+
+            {/* Footer */}
+            <div style={{ borderTop: `1px solid ${T.line}`, padding: "16px 24px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.brand500, textAlign: "center", marginBottom: 12 }}>
+                <span style={{ fontWeight: 800 }}>Filters ready to apply</span>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => { setPendingSort("newest"); setPendingYears([]); setPendingDifficulty([]); setPendingLevel(""); onFilterSortChange("newest"); onFilterYearsChange([]); onFilterDifficultyChange([]); onFilterLevelChange(""); }}
+                  style={{ flex: 1, padding: "13px", borderRadius: 14, border: `1.5px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                  Reset
+                </button>
+                <button onClick={() => { onFilterSortChange(pendingSort); onFilterYearsChange(pendingYears); onFilterDifficultyChange(pendingDifficulty); onFilterLevelChange(pendingLevel); setFilterOpen(false); }}
+                  style={{ flex: 2, padding: "13px", borderRadius: 14, border: "none", background: T.brandGrad, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 8px 20px rgba(255,107,0,.35)" }}>
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
 
       <style>{`
         @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -1480,6 +1646,11 @@ function QDContent() {
   const [bookmarks, setBookmarks] = useState<Record<string, Question>>(() => {
     try { return JSON.parse(localStorage.getItem("paper_bookmarks") || "{}"); } catch { return {}; }
   });
+
+  const [filterSort, setFilterSort] = useState<"newest"|"oldest">("newest");
+  const [filterYears, setFilterYears] = useState<number[]>([]);
+  const [filterDifficulty, setFilterDifficulty] = useState<string[]>([]);
+  const [filterLevel, setFilterLevel] = useState<string>("");
 
   function toggleBookmark(q: Question) {
     setBookmarks(prev => {
@@ -1558,6 +1729,10 @@ function QDContent() {
         subject={practiceSubject} chapter={practiceChapter} topic={practiceTopic} exam={exam}
         onBack={() => router.back()}
         onSelectQuestion={at => goPractice(practiceSubject, practiceChapter, practiceTopic, at)}
+        filterSort={filterSort}
+        filterYears={filterYears}
+        filterDifficulty={filterDifficulty}
+        filterLevel={filterLevel}
       />
     );
   }
@@ -1572,6 +1747,10 @@ function QDContent() {
         onExamChange={e => goApp(e)}
         onPractice={goPractice}
         onShowList={goQuestionList}
+        filterSort={filterSort} onFilterSortChange={setFilterSort}
+        filterYears={filterYears} onFilterYearsChange={setFilterYears}
+        filterDifficulty={filterDifficulty} onFilterDifficultyChange={setFilterDifficulty}
+        filterLevel={filterLevel} onFilterLevelChange={setFilterLevel}
       />
     );
   }
