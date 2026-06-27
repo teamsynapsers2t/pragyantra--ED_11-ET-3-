@@ -278,7 +278,7 @@ function DashboardContent() {
   const navItems = [
     { label: "Overview", active: true, path: "/dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg> },
     { label: "Root Causes", path: "/dashboard/root-causes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg> },
-    { label: "Weak Concepts", path: "/weakness-report", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
+    { label: "Weak Concepts", path: "/dashboard/weakness", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
     { label: "Practice", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> },
     { label: "Mock Tests", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 10h8M8 14h6"/></svg> },
   ];
@@ -656,7 +656,7 @@ function DashboardContent() {
                       <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Micro Weaknesses</h3>
                       <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>The exact mistakes — ranked by marks lost.</p>
                     </div>
-                    <button onClick={() => router.push("/weakness-report")} style={{ fontSize: 13.5, fontWeight: 700, color: "#D5740E", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>View all</button>
+                    <button onClick={() => router.push("/dashboard/weakness")} style={{ fontSize: 13.5, fontWeight: 700, color: "#D5740E", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>View all</button>
                   </div>
 
                   {loadingSignals ? (

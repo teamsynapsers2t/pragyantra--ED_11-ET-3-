@@ -79,8 +79,9 @@ export default function RootCausesPage() {
   }, [fetchData]);
 
   useEffect(() => {
-    fetchData();
-    // Poll every 10 seconds
+    // Always refresh on page load so data appears without a manual reload.
+    fetch("/api/weakness/refresh", { method: "POST" })
+      .finally(() => fetchData());
     const id = setInterval(() => fetchData(true), 10000);
     return () => clearInterval(id);
   }, [fetchData]);

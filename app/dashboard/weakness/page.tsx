@@ -220,6 +220,7 @@ export default function WeaknessPage() {
   const [navOpen, setNavOpen] = useState(false); // mobile sidebar drawer
 
   useEffect(() => {
+    fetch("/api/weakness/refresh", { method: "POST" }).catch(() => {}).finally(() =>
     fetch("/api/weakness")
       .then(r => r.ok ? r.json() : { signals: [], report: null })
       .then(data => {
@@ -254,7 +255,8 @@ export default function WeaknessPage() {
           if (sigs.length === 0) setPhase("done");
         }, 900);
       })
-      .catch(() => { setLoading(false); setPhase("done"); });
+      .catch(() => { setLoading(false); setPhase("done"); })
+    );
   }, []);
 
   const glass = "rgba(255,255,255,0.55)";
