@@ -438,7 +438,8 @@ function QuestionListView({
       qs = qs.filter(q => filterYears.includes(Number(q.year)));
     }
     if (filterDifficulty && filterDifficulty.length > 0) {
-      qs = qs.filter(q => filterDifficulty.includes(q.difficulty || ""));
+      const lowerDiffs = filterDifficulty.map(d => d.toLowerCase());
+      qs = qs.filter(q => lowerDiffs.includes((q.difficulty || "").toLowerCase()));
     }
     if (filterSort === "oldest") {
       qs = [...qs].sort((a, b) => Number(a.year) - Number(b.year));
