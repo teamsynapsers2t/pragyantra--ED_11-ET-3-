@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import { fractionToPercent } from "@/utils/scale";
 
 interface WeaknessSignal {
   id: number;
@@ -182,8 +183,8 @@ export default function WeaknessReportPage() {
                   {rootFlaws.map((flaw, idx) => {
                     const rootConcept = flaw.evidence?.root_concept_name || "Prerequisite";
                     const weakConcept = flaw.evidence?.weak_concept_name || flaw.conceptName;
-                    const rootMastery = flaw.evidence?.root_mastery ?? 0;
-                    const weakMastery = flaw.evidence?.weak_mastery ?? 0;
+                    const rootMastery = fractionToPercent(flaw.evidence?.root_mastery ?? 0);
+                    const weakMastery = fractionToPercent(flaw.evidence?.weak_mastery ?? 0);
                     const strength = flaw.evidence?.relationship_strength || 8;
 
                     return (

@@ -3,6 +3,7 @@ import { streamText } from 'ai'
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
+import { clerkIdToUuid } from '@/utils/helpers'
 
 // Important to handle longer AI generational response times
 export const maxDuration = 60;
@@ -44,7 +45,7 @@ export async function POST(req: Request) {
         const finalContent = event.text
         
         await supabase.from('ai_roadmaps').insert({
-          user_id: userId,
+          user_id: clerkIdToUuid(userId),
           domain: domain,
           roadmap_data: {
              prompt_context: { userClass, prepLevel, journey },

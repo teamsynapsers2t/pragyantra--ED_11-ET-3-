@@ -23,9 +23,6 @@ export async function GET(req: Request) {
 
     const supabase = await createClient()
 
-    console.log("[API Questions] Clerk userId:", userId)
-    console.log("[API Questions] Supabase URL:", process.env.NEXT_PUBLIC_SUPABASE_URL)
-
     // chapter_id in DB uses an offset: cid >= 87 in the mapping means DB id = cid + 1
     const toDbChapterId = (cid: number) => cid >= 87 ? cid + 1 : cid
 
@@ -73,7 +70,15 @@ export async function GET(req: Request) {
       conceptMap[c.id] = c.concept_name
     })
 
-    console.log(`[API Questions] Fetched ${questions?.length || 0} questions from Supabase.`)
+    // Authoritative subject/chapter labels from the DB (prevents drift vs the static map)
+    const { data: dbChapters } = await supabase
+      .from('chapters')
+      .select('id, subject, chapter_name')
+    const chapterInfo: { [id: number]: { subject: string; chapter: string } } = {}
+    dbChapters?.forEach((c: any) => {
+      chapterInfo[c.id] = { subject: c.subject || '', chapter: (c.chapter_name || '').trim() }
+    })
+
 
     // Filter out MCQ questions that don't have options
     const validQuestions = (questions || []).filter((q: any) => {
@@ -89,17 +94,11 @@ export async function GET(req: Request) {
         .sort((a: any, b: any) => (a.option_label || '').localeCompare(b.option_label || ''))
         .map((o: any) => o.option_text)
 
-      // Map correct_option ('a', 'b', 'c', 'd') to index (0, 1, 2, 3)
-      let answerIndex = 0
-      if (q.correct_option) {
-        const label = q.correct_option.toLowerCase().trim()
-        if (label === 'a') answerIndex = 0
-        else if (label === 'b') answerIndex = 1
-        else if (label === 'c') answerIndex = 2
-        else if (label === 'd') answerIndex = 3
-      }
-
       const mapping = getQuestionMapping(q.chapter_id)
+      // Prefer DB chapter labels; fall back to the static map only if the DB row is missing
+      const dbInfo = chapterInfo[q.chapter_id]
+      const subjectLabel = dbInfo?.subject || mapping.subject
+      const chapterLabel = dbInfo?.chapter || mapping.chapter
 
       // Resolve topic/concept from DB mapping if present
       let questionTopic = mapping.topic
@@ -110,15 +109,17 @@ export async function GET(req: Request) {
         }
       }
 
+      // SECURITY: never ship `answer` or `explanation` in the list payload —
+      // that would let anyone read the answer key from the Network tab and would
+      // pollute the engine via cheating. The correct answer + explanation are
+      // returned by /api/attempts/submit AFTER the student answers.
       return {
         id: String(q.id),
-        subject: mapping.subject,
-        chapter: mapping.chapter,
+        subject: subjectLabel,
+        chapter: chapterLabel,
         topic: questionTopic,
         question: q.question_text,
         options: sortedOptions,
-        answer: q.question_type === 'numerical' ? q.numerical_answer : answerIndex,
-        explanation: q.explanation || "No explanation available.",
         difficulty: q.difficulty || "medium",
         exam: q.exam_type || "jee-main",
         year: q.year || 2024,
@@ -128,7 +129,6 @@ export async function GET(req: Request) {
 
     // subject, chapter, difficulty, year, exam are already filtered at the DB level above.
     // topic must stay in JS because it is resolved from question_concepts, not a flat column.
-    console.log(`[API Questions] Total mapped questions: ${mappedQuestions.length}. Filtering inputs - topic: ${topic}`)
     if (topic && topic !== 'All') {
       mappedQuestions = mappedQuestions.filter(q => q.topic === topic)
     }

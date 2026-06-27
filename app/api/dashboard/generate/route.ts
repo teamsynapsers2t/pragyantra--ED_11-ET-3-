@@ -4,6 +4,7 @@ import { z } from 'zod'
 import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
+import { clerkIdToUuid } from '@/utils/helpers'
 
 // Important to handle longer AI generational response times
 export const maxDuration = 60;
@@ -21,8 +22,6 @@ export async function POST(req: Request) {
 
     // 2. Extract context payload (Onboarding + Quiz Output)
     const { domain, class: userClass, prepLevel, journey, subjectAnalysis, topicAnalysis } = await req.json()
-
-    console.log("Analyzing massive dashboard payload via Gemini...")
 
     // 3. Command Gemini into Object Mode
     const { object } = await generateObject({
@@ -122,11 +121,9 @@ export async function POST(req: Request) {
       })
     });
 
-    console.log("AI Generation Successful.")
-
     // 4. Secretly save generational output into Supabase
     await supabase.from('ai_roadmaps').insert({
-        user_id: userId,
+        user_id: clerkIdToUuid(userId),
         domain: domain || "Unknown",
         roadmap_data: object
     })

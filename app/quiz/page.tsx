@@ -11,19 +11,10 @@ interface Question {
   topic: string;
   question: string;
   options: string[];
-  answer: any;
-  explanation: string;
   difficulty: string;
   exam: string;
   year: number;
   question_type: string;
-}
-
-// Numerical tolerance matching the server (±0.01 or 0.1% relative)
-function isNumericallyClose(userVal: number, correctVal: number): boolean {
-  if (isNaN(userVal) || isNaN(correctVal)) return false;
-  const tolerance = Math.max(0.01, Math.abs(correctVal) * 0.001);
-  return Math.abs(userVal - correctVal) <= tolerance;
 }
 
 function QuizContent() {
@@ -40,6 +31,10 @@ function QuizContent() {
   const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null);
   const [showExplanation, setShowExplanation] = useState(false);
   const [answers, setAnswers] = useState<any[]>([]);
+  // Reveal data from the server AFTER submitting (no pre-loaded answer key)
+  const [revealIndex, setRevealIndex] = useState<number | null>(null);
+  const [revealAnswer, setRevealAnswer] = useState<string | null>(null);
+  const [revealExp, setRevealExp] = useState<string | null>(null);
   
   const [startTime, setStartTime] = useState(Date.now());
   const [timeSpent, setTimeSpent] = useState(0);
@@ -156,34 +151,13 @@ function QuizContent() {
     if (timerRef.current) clearInterval(timerRef.current);
     setIsAnswerChecked(true);
 
-    // Local correctness check (for instant UI feedback)
+    // Server is authoritative for correctness AND owns the answer key.
+    // The client never sees the answer until this response comes back.
+    const letters = ["A", "B", "C", "D", "E"];
+    const submitVal = isNumerical ? numericalInput.trim() : letters[selected!];
+
     let isCorrect = false;
-    if (isNumerical) {
-      const userVal = parseFloat(numericalInput.trim());
-      const correctVal = parseFloat(String(question.answer).trim());
-      isCorrect = isNumericallyClose(userVal, correctVal);
-    } else {
-      isCorrect = selected === question.answer;
-    }
-
-    setIsCorrectState(isCorrect);
-
-    // Save answer locally for summary screen
-    setAnswers((prev) => [
-      ...prev,
-      {
-        subject: question.subject,
-        topic: question.topic || "General",
-        correct: isCorrect,
-        time: timeSpent,
-      },
-    ]);
-
-    // Send attempt to Supabase (trigger fires fn_apply_attempt automatically)
     try {
-      const letters = ["A", "B", "C", "D", "E"];
-      const submitVal = isNumerical ? numericalInput.trim() : letters[selected!];
-
       const res = await fetch("/api/attempts/submit", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -199,22 +173,31 @@ function QuizContent() {
         }),
       });
 
-      // Use server's authoritative isCorrect (handles tolerance precisely)
       if (res.ok) {
         const data = await res.json();
-        if (data.isCorrect !== undefined && data.isCorrect !== isCorrect) {
-          setIsCorrectState(data.isCorrect);
-          // Update the last answer entry
-          setAnswers((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1].correct = data.isCorrect;
-            return updated;
-          });
-        }
+        isCorrect = !!data.isCorrect;
+        setIsCorrectState(isCorrect);
+        setRevealIndex(data.correctIndex ?? null);
+        setRevealAnswer(data.correctOption ?? null);
+        setRevealExp(data.explanation ?? null);
+      } else {
+        setIsCorrectState(false);
       }
     } catch (err) {
       console.warn("Could not submit attempt:", err);
+      setIsCorrectState(false);
     }
+
+    // Save answer for the summary screen (uses the server's verdict)
+    setAnswers((prev) => [
+      ...prev,
+      {
+        subject: question.subject,
+        topic: question.topic || "General",
+        correct: isCorrect,
+        time: timeSpent,
+      },
+    ]);
   };
 
   const handleNext = () => {
@@ -224,6 +207,9 @@ function QuizContent() {
     setIsAnswerChecked(false);
     setIsCorrectState(null);
     setShowExplanation(false);
+    setRevealIndex(null);
+    setRevealAnswer(null);
+    setRevealExp(null);
     setTimeSpent(0);
     setStartTime(Date.now());
   };
@@ -287,10 +273,10 @@ function QuizContent() {
                 value={numericalInput}
                 onChange={(e) => setNumericalInput(e.target.value)}
               />
-              {isAnswerChecked && (
+              {isAnswerChecked && revealAnswer != null && (
                 <div className="text-sm">
                   <span className="text-gray-400">Correct Answer: </span>
-                  <span className="text-emerald-400 font-bold font-mono">{question.answer}</span>
+                  <span className="text-emerald-400 font-bold font-mono">{revealAnswer}</span>
                 </div>
               )}
             </div>
@@ -299,7 +285,7 @@ function QuizContent() {
               {question.options.map((opt, i) => {
                 const optionLetters = ["A", "B", "C", "D", "E"];
                 const isSelected = selected === i;
-                const isCorrectChoice = question.answer === i;
+                const isCorrectChoice = revealIndex === i;
 
                 let optionStyle = "bg-[#111a2f] border-[#1e293b] text-gray-300 hover:border-gray-500 hover:bg-[#16223f]";
                 let letterStyle = "bg-[#1e293b] text-gray-400";
@@ -341,7 +327,7 @@ function QuizContent() {
         {/* Footer Actions */}
         <div className="px-6 py-4 border-t border-[#1e293b] flex items-center justify-between bg-[#111a2f]">
           <div>
-            {isAnswerChecked && (
+            {isAnswerChecked && revealExp && (
               <button
                 onClick={() => setShowExplanation(prev => !prev)}
                 className="bg-[#1e293b] hover:bg-[#2e3b4e] border border-[#334155] text-white text-xs px-4 py-2.5 rounded-xl transition font-bold"
@@ -373,7 +359,7 @@ function QuizContent() {
 
         {/* Solution Section */}
         <AnimatePresence>
-          {showExplanation && question.explanation && (
+          {showExplanation && revealExp && (
             <motion.div
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: "auto", opacity: 1 }}
@@ -383,9 +369,9 @@ function QuizContent() {
               <h4 className="text-sm font-extrabold text-emerald-400 flex items-center gap-1.5">
                 <span>📝</span> Detailed Explanation
               </h4>
-              <div 
+              <div
                 className="text-gray-300 text-sm md:text-base leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
-                dangerouslySetInnerHTML={{ __html: question.explanation }}
+                dangerouslySetInnerHTML={{ __html: revealExp }}
               />
             </motion.div>
           )}
@@ -494,15 +480,21 @@ function ResultPage({ answers, subject, sessionId }: { answers: any[]; subject: 
           ))}
         </div>
 
-        <div className="text-center">
+        <div className="text-center space-y-3">
           <button
-            onClick={() =>
-              router.push(`/dashboard?data=${encodeURIComponent(JSON.stringify({ subjectAnalysis, topicAnalysis }))}`)
-            }
+            onClick={() => router.push("/dashboard")}
             className="bg-orange-500 text-white px-8 py-4 rounded-xl text-lg hover:bg-orange-600 transition font-extrabold shadow-md shadow-orange-500/20"
           >
-            Get Your Roadmap →
+            See Your Weakness Analysis →
           </button>
+          <div>
+            <button
+              onClick={() => router.push("/question_dashboard")}
+              className="text-sm text-gray-400 hover:text-gray-300 transition font-semibold"
+            >
+              ← Back to Practice
+            </button>
+          </div>
         </div>
       </motion.div>
     </div>

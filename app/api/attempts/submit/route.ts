@@ -118,13 +118,6 @@ export async function POST(req: Request) {
       created_at: new Date().toISOString(),
     }
 
-    console.log("[API Attempts] Inserting attempt:", {
-      user_id: attemptRow.user_id,
-      question_id: attemptRow.question_id,
-      is_correct: attemptRow.is_correct,
-      time_taken_ms: attemptRow.time_taken_ms,
-    })
-
     const { data: insertedData, error: insertError } = await supabase
       .from('attempts')
       .insert(attemptRow)
@@ -139,9 +132,19 @@ export async function POST(req: Request) {
     // It updates concept_mastery (EWMA), fires/clears weak_concept and time_trap signals.
     // DO NOT call updateConceptMastery or any mastery function here.
 
+    // Map correct_option letter -> index so the client can highlight without ever
+    // receiving the answer key up-front (anti-cheat: reveal only AFTER submission).
+    const letterToIndex = (l: string | null | undefined) => {
+      if (!l) return null
+      const i = l.toString().trim().toUpperCase().charCodeAt(0) - 65
+      return i >= 0 && i < 26 ? i : null
+    }
+
     return NextResponse.json({
       isCorrect,
       correctOption: qType === 'numerical' ? String(question.numerical_answer) : String(question.correct_option),
+      correctIndex: qType === 'numerical' ? null : letterToIndex(question.correct_option),
+      explanation: question.explanation || null,
       attemptId: insertedData?.[0]?.id,
     })
 

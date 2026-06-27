@@ -1,29 +1,65 @@
-"use client";
-
 import { SignUp } from "@clerk/nextjs";
-import { dark } from "@clerk/themes";
-import { motion } from "framer-motion";
 
-export default function SignUpPage() {
+export default function Page() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-[#121212] to-[#1a1a1a] text-white p-6 relative overflow-hidden">
-      {/* Glowing background highlights */}
-      <div className="absolute w-[500px] h-[500px] bg-orange-500/20 blur-[150px] rounded-full bottom-[-100px] right-[-100px]" />
-      <div className="absolute w-[500px] h-[500px] bg-orange-400/10 blur-[120px] rounded-full top-[-100px] left-[-100px]" />
+    <>
+      <style>{`
+        .auth-container {
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          min-height: 100vh;
+          width: 100%;
+          position: relative;
+          overflow: hidden;
+          box-sizing: border-box;
+        }
+        .auth-card-wrapper {
+          position: relative;
+          z-index: 1;
+          margin: 2rem 0;
+        }
+        @media (min-width: 768px) {
+          .auth-card-wrapper {
+            position: absolute;
+            right: 8%;
+            top: 50%;
+            transform: translateY(-50%);
+            margin: 0;
+          }
+        }
+        @media (min-width: 1200px) {
+          .auth-card-wrapper {
+            right: 12%;
+          }
+        }
+      `}</style>
+      
+      <div className="auth-container">
+        {/* Background Video */}
+        <div style={{ position: "absolute", inset: 0, zIndex: 0 }}>
+          <video 
+            autoPlay 
+            loop 
+            muted 
+            playsInline 
+            style={{ width: "100%", height: "100%", objectFit: "cover" }}
+          >
+            <source src="/whatsapp-video.mp4" type="video/mp4" />
+          </video>
+          {/* Dark overlay: fades from lighter dark on the left to deeper dark on the right */}
+          <div style={{
+            position: "absolute",
+            inset: 0,
+            background: "linear-gradient(to right, rgba(10, 13, 20, 0.4) 0%, rgba(10, 13, 20, 0.75) 60%, rgba(10, 13, 20, 0.95) 100%)",
+          }} />
+        </div>
 
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-md relative z-10 flex justify-center"
-      >
-        <SignUp
-          appearance={{
-            elements: {
-              cardBox: "shadow-[0_0_50px_rgba(249,115,22,0.15)] rounded-3xl overflow-hidden border border-zinc-800",
-            }
-          }}
-        />
-      </motion.div>
-    </div>
+        {/* Clerk Card Wrapper */}
+        <div className="auth-card-wrapper">
+          <SignUp fallbackRedirectUrl="/dashboard" />
+        </div>
+      </div>
+    </>
   );
 }

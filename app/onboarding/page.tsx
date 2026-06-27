@@ -70,6 +70,9 @@ export default function OnboardingPage() {
             const errorMsg = validateStep();
             if (errorMsg) {
               setError(errorMsg);
+            } else {
+              // Mirror the Finish button: persist answers, then advance.
+              localStorage.setItem("onboardingData", JSON.stringify(form));
               window.location.href = "/transition";
             }
           }

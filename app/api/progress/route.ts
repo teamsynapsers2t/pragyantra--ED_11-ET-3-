@@ -28,16 +28,24 @@ export async function GET(req: Request) {
       return NextResponse.json({ attempts: [] })
     }
 
-    // Fetch subjects of these questions to map in memory (safe from relationship join errors)
+    // Resolve each question's subject via its chapter (authoritative), mirroring
+    // /api/questions which derives subject from the `chapters` table, not a flat
+    // `questions.subject` column (that one can be stale/null).
     const questionIds = Array.from(new Set(dbAttempts.map((a: any) => a.question_id)))
     const { data: questions } = await supabase
       .from('questions')
-      .select('id, subject')
+      .select('id, chapter_id')
       .in('id', questionIds)
+
+    const { data: chapters } = await supabase
+      .from('chapters')
+      .select('id, subject')
+    const chapterSubject: { [id: number]: string } = {}
+    chapters?.forEach((c: any) => { chapterSubject[c.id] = c.subject || "physics" })
 
     const subjectMap: { [id: number]: string } = {}
     questions?.forEach((q: any) => {
-      subjectMap[q.id] = q.subject || "physics"
+      subjectMap[q.id] = chapterSubject[q.chapter_id] || "physics"
     })
 
     const attempts = dbAttempts.map((a: any) => ({
@@ -54,47 +62,5 @@ export async function GET(req: Request) {
   } catch (err: any) {
     console.error("Progress GET error:", err)
     return NextResponse.json({ error: err.message }, { status: 500 })
-  }
-}
-
-export async function POST(req: Request) {
-  // Keep POST method writing to user_actions if anything calls it
-  try {
-    const { userId } = await auth()
-    if (!userId) {
-      return new NextResponse("Unauthorized", { status: 401 })
-    }
-
-    const { questionId, subject, isCorrect, selectedOption, timeSpent } = await req.json()
-
-    const supabase = await createClient()
-
-    const { data, error } = await supabase
-      .from('user_actions')
-      .insert({
-        user_id: userId,
-        action_type: 'question_submit',
-        category: 'Practice',
-        label: subject,
-        payload: {
-          questionId,
-          subject,
-          isCorrect,
-          selectedOption,
-          timeSpent,
-          timestamp: new Date().toISOString()
-        }
-      })
-
-    if (error) {
-      console.warn("Supabase progress logging warning:", error.message)
-      return NextResponse.json({ success: false, warning: error.message })
-    }
-
-    return NextResponse.json({ success: true })
-
-  } catch (err: any) {
-    console.warn("Progress POST catch warning:", err.message)
-    return NextResponse.json({ success: false, warning: err.message })
   }
 }

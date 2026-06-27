@@ -1,34 +1,15 @@
 "use client";
 
-import { useState, useEffect, useRef, Suspense } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
-import { motion, AnimatePresence } from "framer-motion";
+import { useState, useEffect, Suspense, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { UserButton, useUser } from "@clerk/nextjs";
-
-interface Question {
-  id: string;
-  subject: string;
-  chapter: string;
-  topic: string;
-  question: string;
-  options: string[];
-  answer: any;
-  explanation: string;
-  difficulty: string;
-  exam: string;
-  year: number;
-  question_type: string;
-}
-
-interface Chapter {
-  name: string;
-  topics: string[];
-}
+import { fractionToPercent } from "@/utils/scale";
 
 interface WeaknessSignal {
   id: string;
   conceptId: number;
   conceptName: string;
+  subject?: string;
   signal: string;
   severity: "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
   severityScore: number;
@@ -36,1189 +17,715 @@ interface WeaknessSignal {
   evidence: any;
   insightMessage?: string;
   createdAt: string;
+  masteryScore: number | null;
+  totalAttempts: number;
+  totalCorrect: number;
+  dominantErrorType: string | null;
 }
 
-// Numerical tolerance matching the server (±0.01 or 0.1% relative)
-function isNumericallyClose(userVal: number, correctVal: number): boolean {
-  if (isNaN(userVal) || isNaN(correctVal)) return false;
-  const tolerance = Math.max(0.01, Math.abs(correctVal) * 0.001);
-  return Math.abs(userVal - correctVal) <= tolerance;
-}
-
-// Session end effect for practice mode — fires once when practice finishes
-function PracticeEndEffect({ sessionId, practiceAnswers }: { sessionId: string | null; practiceAnswers: any[] }) {
-  const endedRef = useRef(false);
-
-  useEffect(() => {
-    if (endedRef.current || !sessionId) return;
-    endedRef.current = true;
-
-    const correct = practiceAnswers.filter((a: any) => a.correct).length;
-    const total = practiceAnswers.length;
-
-    fetch("/api/sessions/end", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        sessionId,
-        questionsAttempted: total,
-        questionsCorrect: correct,
-        questionsSkipped: 0,
-      }),
-    }).catch((err) => console.warn("Could not end session:", err));
-  }, [sessionId, practiceAnswers]);
-
-  return null;
+function SmallRingChart({ pct }: { pct: number }) {
+  const r = 24, circ = 2 * Math.PI * r;
+  const dash = (pct / 100) * circ;
+  return (
+    <svg width="64" height="64" viewBox="0 0 64 64" style={{ flexShrink: 0 }}>
+      <defs>
+        <linearGradient id="gMas2" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stopColor="#F4AB2D" /><stop offset="1" stopColor="#E0701E" />
+        </linearGradient>
+      </defs>
+      <circle cx="32" cy="32" r={r} fill="none" stroke="rgba(120,90,50,.14)" strokeWidth="8" />
+      <circle cx="32" cy="32" r={r} fill="none" stroke="url(#gMas2)" strokeWidth="8"
+        strokeLinecap="round" strokeDasharray={`${dash} ${circ - dash}`}
+        strokeDashoffset="0" transform="rotate(-90 32 32)" />
+    </svg>
+  );
 }
 
 function DashboardContent() {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const { user, isLoaded } = useUser();
 
-  // Navigation and Selection State
-  const [activeSubject, setActiveSubject] = useState<string | null>(null);
-  const [activeChapter, setActiveChapter] = useState<string | null>(null);
-  const [activeTopic, setActiveTopic] = useState<string | null>(null);
-  
-  // Chapters State
-  const [chapters, setChapters] = useState<Chapter[]>([]);
-  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
-  const [loadingChapters, setLoadingChapters] = useState(false);
-
-  // Weakness Signals State
   const [rootFlaws, setRootFlaws] = useState<WeaknessSignal[]>([]);
   const [allSignals, setAllSignals] = useState<WeaknessSignal[]>([]);
   const [loadingSignals, setLoadingSignals] = useState(true);
-
-  // Progress/Stats State
   const [attemptsCount, setAttemptsCount] = useState(0);
   const [accuracyRate, setAccuracyRate] = useState(0);
+  const [streakDays, setStreakDays] = useState(0);
+  const [timeSpentStr, setTimeSpentStr] = useState("0m");
   const [loadingStats, setLoadingStats] = useState(true);
 
-  // Logo Upload State
-  const [uploadedLogo, setUploadedLogo] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  // Practice Mode State
-  const [activePractice, setActivePractice] = useState(false);
-  const [questions, setQuestions] = useState<Question[]>([]);
-  const [loadingQuestions, setLoadingQuestions] = useState(false);
-  const [currentQuestionIndex, setCurrentQuestionIndex] = useState(0);
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [numericalInput, setNumericalInput] = useState("");
-  const [isAnswerChecked, setIsAnswerChecked] = useState(false);
-  const [isCorrectState, setIsCorrectState] = useState<boolean | null>(null);
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [practiceAnswers, setPracticeAnswers] = useState<any[]>([]);
-  const [timeSpent, setTimeSpent] = useState(0);
-  
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
-
-  // Session tracking for practice mode
-  const [practiceSessionId, setPracticeSessionId] = useState<string | null>(null);
-
-  // 1. Fetch Weakness Signals
+  const [liveUpdating, setLiveUpdating] = useState(false);
+  const [lastRefreshed, setLastRefreshed] = useState<Date | null>(null);
+  const [activeSubject, setActiveSubject] = useState<string | null>(null);
+  // Mobile sidebar drawer (hidden on desktop, slides in on small screens)
+  const [navOpen, setNavOpen] = useState(false);
+  // Domain read from localStorage (set during select-domain flow)
+  const [domain, setDomain] = useState("JEE");
+  // Render today's date only after mount to avoid SSR/client hydration mismatch
+  const [todayStr, setTodayStr] = useState("");
   useEffect(() => {
-    async function fetchWeakness() {
-      try {
-        const res = await fetch("/api/weakness");
-        if (res.ok) {
-          const data = await res.json();
-          const signals = data.signals || [];
-          setAllSignals(signals);
-
-          // Filter root flaws and rank by root_flaw_score descending
-          const flaws = signals
-            .filter((s: any) => s.signal === "root_flaw")
-            .sort((a: any, b: any) => {
-              const scoreA = a.evidence?.root_flaw_score || 0;
-              const scoreB = b.evidence?.root_flaw_score || 0;
-              return scoreB - scoreA;
-            });
-          setRootFlaws(flaws);
-        }
-      } catch (err) {
-        console.error("Failed to fetch weakness signals:", err);
-      } finally {
-        setLoadingSignals(false);
-      }
-    }
-    fetchWeakness();
+    setTodayStr(new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }));
+    const saved = localStorage.getItem("domain");
+    if (saved) setDomain(saved);
   }, []);
 
-  // 2. Fetch Attempts Stats
-  useEffect(() => {
-    async function fetchStats() {
-      try {
-        const res = await fetch("/api/progress");
-        if (res.ok) {
-          const data = await res.json();
-          const attempts = data.attempts || [];
-          setAttemptsCount(attempts.length);
+  const loadWeakness = useCallback((isLive = false) => {
+    if (isLive) setLiveUpdating(true);
+    fetch("/api/weakness").then(r => r.ok ? r.json() : { signals: [] }).then(data => {
+      const signals: WeaknessSignal[] = data.signals || [];
+      setAllSignals(signals);
+      setRootFlaws(
+        signals.filter(s => s.signal === "root_flaw")
+          .sort((a, b) => (b.evidence?.root_flaw_score || 0) - (a.evidence?.root_flaw_score || 0))
+      );
+      setLastRefreshed(new Date());
+    }).catch(() => {}).finally(() => { setLoadingSignals(false); setLiveUpdating(false); });
+  }, []);
 
-          if (attempts.length > 0) {
-            const correctCount = attempts.filter((a: any) => a.isCorrect).length;
-            setAccuracyRate(Math.round((correctCount / attempts.length) * 100));
+  useEffect(() => {
+    loadWeakness();
+    // Poll every 10 seconds for live updates
+    const id = setInterval(() => loadWeakness(true), 10000);
+    return () => clearInterval(id);
+  }, [loadWeakness]);
+
+  useEffect(() => {
+    fetch("/api/progress").then(r => r.ok ? r.json() : { attempts: [] }).then(data => {
+      const fetched: any[] = data.attempts || [];
+      setAttemptsCount(fetched.length);
+      if (fetched.length > 0) {
+        const correct = fetched.filter(a => a.isCorrect).length;
+        setAccuracyRate(Math.round((correct / fetched.length) * 100));
+        const totalSecs = fetched.reduce((acc: number, a: any) => acc + (a.timeSpent || 0), 0);
+        const hrs = Math.floor(totalSecs / 3600), mins = Math.floor((totalSecs % 3600) / 60);
+        setTimeSpentStr(hrs > 0 ? `${hrs}h ${mins}m` : `${mins}m`);
+        const dates = [...new Set(fetched.map((a: any) => a.timestamp?.split("T")[0]).filter(Boolean))].sort().reverse() as string[];
+        let streak = 0;
+        if (dates.length > 0) {
+          const today = new Date(Date.now()).toISOString().split("T")[0];
+          const yesterday = new Date(Date.now() - 86400000).toISOString().split("T")[0];
+          // Grace until end of today: the streak holds if the last practice day is
+          // today OR yesterday. Anchor from that day and count consecutive days back.
+          if (dates[0] === today || dates[0] === yesterday) {
+            const anchor = new Date(dates[0] + "T00:00:00Z").getTime();
+            for (let i = 0; i < dates.length; i++) {
+              const expected = new Date(anchor - i * 86400000).toISOString().split("T")[0];
+              if (dates[i] === expected) streak++; else break;
+            }
           }
         }
-      } catch (err) {
-        console.error("Failed to fetch attempts progress stats:", err);
-      } finally {
-        setLoadingStats(false);
+        setStreakDays(streak);
       }
-    }
-    fetchStats();
-  }, [activePractice]);
+    }).catch(() => {}).finally(() => setLoadingStats(false));
+  }, []);
 
-  // 3. Fetch Chapters when active subject changes
-  useEffect(() => {
-    const subj = activeSubject;
-    if (!subj) {
-      setChapters([]);
-      return;
+  const clean = (s: string) => s ? s.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ") : "";
+
+  const overallMastery = (() => {
+    const ms = allSignals.map(s => s.masteryScore).filter((m): m is number => m !== null);
+    return ms.length ? Math.round(ms.reduce((a, b) => a + b, 0) / ms.length) : accuracyRate;
+  })();
+
+  // Group root flaws by subject so the hero can show a section per subject.
+  // Subject list comes straight from the data, so it adapts to JEE (Physics/
+  // Chemistry/Maths) or NEET (Physics/Chemistry/Biology) automatically.
+  const PREFERRED_SUBJECT_ORDER = ["Physics", "Chemistry", "Mathematics", "Maths", "Biology", "Botany", "Zoology"];
+  const subjectGroups: Record<string, WeaknessSignal[]> = {};
+  rootFlaws.forEach(f => { const s = f.subject || "Other"; (subjectGroups[s] ||= []).push(f); });
+  const subjectOrder = Object.keys(subjectGroups).sort((a, b) => {
+    const ia = PREFERRED_SUBJECT_ORDER.indexOf(a), ib = PREFERRED_SUBJECT_ORDER.indexOf(b);
+    const ra = ia === -1 ? 99 : ia, rb = ib === -1 ? 99 : ib;
+    if (ra !== rb) return ra - rb;
+    return (subjectGroups[b][0]?.evidence?.root_flaw_score || 0) - (subjectGroups[a][0]?.evidence?.root_flaw_score || 0);
+  });
+  const effectiveSubject = (activeSubject && subjectGroups[activeSubject]) ? activeSubject : subjectOrder[0];
+  const activeFlaws = effectiveSubject ? subjectGroups[effectiveSubject] : [];
+
+  // Build the chain nodes for a single root flaw (MULTI-HOP via evidence.path)
+  const buildChain = (f: WeaknessSignal | undefined): any[] => {
+    if (!f) return [];
+    const weakName = clean(f.evidence?.weak_concept_name || f.conceptName);
+    const rootName = clean(f.evidence?.root_concept_name || f.conceptName);
+    const weakMastery = fractionToPercent(f.evidence?.weak_mastery ?? 0);
+    const rootMastery = fractionToPercent(f.evidence?.root_mastery ?? 0);
+    const isSelf = f.evidence?.is_standalone_root || (f.evidence?.weak_concept_id === f.evidence?.root_concept_id);
+    const unlocks: string[] = (f.evidence?.unlocks || []).map((u: string) => clean(u));
+    const rootAttempts: number = f.evidence?.root_attempts ?? f.totalAttempts ?? 0;
+    const rootAccuracy: number = f.evidence?.root_accuracy ?? 0;
+    const weakAccuracy: number = f.evidence?.weak_accuracy ?? 0;
+    const weakAttempts: number = f.evidence?.weak_attempts ?? f.totalAttempts ?? 0;
+
+    if (isSelf) {
+      return [
+        {
+          step: "Root Cause", name: weakName, mastery: weakMastery, root: true,
+          attempts: rootAttempts, accuracy: f.evidence?.root_accuracy ?? rootAccuracy,
+          unlocks,
+          because: "You practiced this and struggled. This is foundational — fixing it unblocks the topics below.",
+        },
+      ];
     }
 
-    async function fetchChapters(subjectName: string) {
-      setLoadingChapters(true);
-      try {
-        const res = await fetch(`/api/chapters?subject=${encodeURIComponent(subjectName)}`);
-        if (res.ok) {
-          const data = await res.json();
-          setChapters(data.chapters || []);
+    // MULTI-HOP: if the engine supplied a full path (symptom → … → root), render it.
+    const path = Array.isArray(f.evidence?.path) ? f.evidence.path : null;
+    if (path && path.length >= 2) {
+      const lastIdx = path.length - 1;
+      return path.map((p: any, i: number) => {
+        const isRoot = i === lastIdx;
+        const nm = clean(p.name);
+        if (isRoot) {
+          return {
+            step: "Root Cause", name: nm, mastery: p.mastery, root: true,
+            attempts: p.attempts, accuracy: p.accuracy, unlocks,
+            because: `This is the deepest weak foundation in the chain. Fixing ${nm} (${p.mastery}%) lifts every topic above it.`,
+          };
         }
-      } catch (err) {
-        console.error("Failed to load chapters:", err);
-      } finally {
-        setLoadingChapters(false);
-      }
-    }
-    fetchChapters(subj);
-  }, [activeSubject]);
-
-  // 4. Handle MathJax Typesetting on Question Transition
-  useEffect(() => {
-    if (typeof window !== "undefined" && (window as any).MathJax) {
-      setTimeout(() => {
-        try {
-          (window as any).MathJax.typesetPromise?.();
-        } catch (e) {
-          console.error("MathJax typesetting error:", e);
-        }
-      }, 100);
-    }
-  }, [questions, currentQuestionIndex, showExplanation, activePractice]);
-
-  // 5. Timer for practice questions
-  useEffect(() => {
-    if (activePractice && questions.length > 0 && !isAnswerChecked && !loadingQuestions && currentQuestionIndex < questions.length) {
-      setTimeSpent(0);
-      if (timerRef.current) clearInterval(timerRef.current);
-      
-      timerRef.current = setInterval(() => {
-        setTimeSpent((prev) => prev + 1);
-      }, 1000);
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current);
-    };
-  }, [activePractice, questions, currentQuestionIndex, isAnswerChecked, loadingQuestions]);
-
-  // Launch Practice Session
-  const startPractice = async (subj: string, chap: string | null, top: string | null) => {
-    setActiveSubject(subj);
-    setActiveChapter(chap);
-    setActiveTopic(top);
-    setActivePractice(true);
-    setLoadingQuestions(true);
-    setCurrentQuestionIndex(0);
-    setSelectedOption(null);
-    setNumericalInput("");
-    setIsAnswerChecked(false);
-    setIsCorrectState(null);
-    setShowExplanation(false);
-    setPracticeAnswers([]);
-    setTimeSpent(0);
-
-    // Start a new session
-    try {
-      const sessionRes = await fetch("/api/sessions/start", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ source: "dashboard", subject: subj, chapter: chap, topic: top }),
+        const next = clean(path[i + 1].name);
+        return {
+          step: i === 0 ? "Symptom" : "Contributing", name: nm, mastery: p.mastery, root: false,
+          attempts: p.attempts, accuracy: p.accuracy, unlocks: [],
+          because: `${nm} (${p.mastery}%) is weak partly because ${next} beneath it is even weaker.`,
+        };
       });
-      if (sessionRes.ok) {
-        const sessionData = await sessionRes.json();
-        setPracticeSessionId(sessionData.sessionId);
-      }
-    } catch (err) {
-      console.warn("Could not start session:", err);
     }
 
-    try {
-      let url = `/api/questions?subject=${encodeURIComponent(subj)}&limit=10`;
-      if (chap) url += `&chapter=${encodeURIComponent(chap)}`;
-      if (top) url += `&topic=${encodeURIComponent(top)}`;
-
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        setQuestions(data.questions || []);
-      }
-    } catch (err) {
-      console.error("Error fetching practice questions:", err);
-    } finally {
-      setLoadingQuestions(false);
-    }
-  };
-
-  // 6. Check for search parameters on load to trigger auto-practice
-  useEffect(() => {
-    const subj = searchParams.get("subject");
-    const chap = searchParams.get("chapter");
-    const top = searchParams.get("topic");
-
-    if (subj) {
-      startPractice(subj, chap, top);
-    }
-  }, [searchParams]);
-
-  const handleCheckAnswer = async () => {
-    if (isAnswerChecked) return;
-
-    const currentQuestion = questions[currentQuestionIndex];
-    const isNumerical = currentQuestion.question_type === "numerical";
-
-    if (isNumerical && !numericalInput.trim()) return;
-    if (!isNumerical && selectedOption === null) return;
-
-    if (timerRef.current) clearInterval(timerRef.current);
-    setIsAnswerChecked(true);
-
-    // Local correctness check (for instant UI feedback)
-    let isCorrect = false;
-    if (isNumerical) {
-      const userVal = parseFloat(numericalInput.trim());
-      const correctVal = parseFloat(String(currentQuestion.answer).trim());
-      isCorrect = isNumericallyClose(userVal, correctVal);
-    } else {
-      isCorrect = selectedOption === currentQuestion.answer;
-    }
-
-    setIsCorrectState(isCorrect);
-
-    // Save answer locally for summary screen
-    setPracticeAnswers((prev) => [
-      ...prev,
+    // Fallback: simple 2-node chain
+    return [
       {
-        subject: currentQuestion.subject,
-        topic: currentQuestion.topic || "General",
-        correct: isCorrect,
-        time: timeSpent,
+        step: "Symptom", name: weakName, mastery: weakMastery, root: false,
+        attempts: weakAttempts, accuracy: weakAccuracy, unlocks: [],
+        because: `${weakName} looks worse (${weakMastery}%) but it's a downstream effect — the real problem is below.`,
       },
-    ]);
+      {
+        step: "Root Cause", name: rootName, mastery: rootMastery, root: true,
+        attempts: rootAttempts, accuracy: rootAccuracy,
+        unlocks,
+        because: `Even though ${rootName} (${rootMastery}%) looks higher than ${weakName} (${weakMastery}%), it's still weak for JEE — and since ${weakName} builds on it, fixing ${rootName} first will lift both scores.`,
+      },
+    ];
+  };
 
-    // Send attempt to Supabase (trigger fires fn_apply_attempt automatically)
-    try {
-      const letters = ["A", "B", "C", "D", "E"];
-      const submitVal = isNumerical ? numericalInput.trim() : letters[selectedOption!];
+  // Show the top 2 root causes for the active subject
+  const topChains = activeFlaws.slice(0, 2).map(buildChain).filter(c => c.length > 0);
+  const chain = topChains[0] || [];
 
-      const res = await fetch("/api/attempts/submit", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          questionId: currentQuestion.id,
-          selectedOption: submitVal,
-          timeTakenMs: timeSpent * 1000,
-          sessionId: practiceSessionId,
-          changedAnswerCount: 0,
-          openedHint: false,
-          openedSolution: false,
-          confidenceRating: null,
-        }),
+  // Weak concepts list — combine root flaws + weak signals, ranked by impact
+  const concepts = (() => {
+    const items: { name: string; subj: string; mastery: number; gain: number; isRoot: boolean }[] = [];
+    rootFlaws.slice(0, 2).forEach(f => {
+      items.push({
+        name: clean(f.evidence?.root_concept_name || f.conceptName),
+        subj: f.subject || "",
+        mastery: f.evidence?.root_mastery != null ? fractionToPercent(f.evidence.root_mastery) : (f.masteryScore ?? 0),
+        gain: Math.min(15, Math.max(4, Math.round((f.masteryScore != null ? (1 - f.masteryScore / 100) * 12 : 8)))),
+        isRoot: true,
       });
-
-      // Use server's authoritative isCorrect
-      if (res.ok) {
-        const data = await res.json();
-        if (data.isCorrect !== undefined && data.isCorrect !== isCorrect) {
-          setIsCorrectState(data.isCorrect);
-          setPracticeAnswers((prev) => {
-            const updated = [...prev];
-            updated[updated.length - 1].correct = data.isCorrect;
-            return updated;
-          });
-        }
+    });
+    allSignals.filter(s => s.signal === "weakness" || s.signal === "weak_concept").slice(0, 5).forEach(s => {
+      if (!items.find(i => i.name === clean(s.conceptName))) {
+        items.push({
+          name: clean(s.conceptName),
+          subj: s.subject || "",
+          mastery: s.masteryScore ?? 0,
+          gain: Math.min(12, Math.max(2, Math.round((s.masteryScore != null ? (1 - s.masteryScore / 100) * 10 : 4)))),
+          isRoot: false,
+        });
       }
-    } catch (err) {
-      console.warn("Could not submit attempt:", err);
-    }
+    });
+    return items.sort((a, b) => a.mastery - b.mastery).slice(0, 6);
+  })();
+
+  // Micro weaknesses — detailed mistake-level
+  const microWeaknesses = allSignals
+    .filter(s => s.signal === "weakness" || s.signal === "weak_concept")
+    .slice(0, 5)
+    .map(s => {
+      const lost = (s.totalAttempts || 0) - (s.totalCorrect || 0);
+      const freq = s.totalAttempts > 0 ? Math.round((1 - (s.totalCorrect || 0) / s.totalAttempts) * 100) : 0;
+      const errType = s.dominantErrorType ? clean(s.dominantErrorType) : "Conceptual gap";
+      return {
+        mistake: `${errType} in ${clean(s.conceptName)}`,
+        concept: clean(s.conceptName),
+        subject: clean(s.subject || "Physics"),
+        marks: lost,
+        freqText: `${freq}% of attempts`,
+        high: s.severity === "HIGH" || s.severity === "CRITICAL",
+      };
+    });
+
+  const isNew = !loadingSignals && !loadingStats && attemptsCount < 20;
+  const surfaceName = chain.length > 0 ? chain[0].name : "…";
+  const rootName = chain.length > 0 ? chain[chain.length - 1].name : "…";
+
+  // Data-derived action-bar numbers (no hardcoded marks/counts)
+  const activeRootNode: any = chain.length > 0 ? chain[chain.length - 1] : null;
+  const rootUnlocks: string[] = activeRootNode?.unlocks || [];
+  const estGainLo = activeRootNode ? Math.max(3, Math.round((1 - (activeRootNode.mastery || 0) / 100) * 6)) : 0;
+  const estGainHi = activeRootNode ? estGainLo + Math.min(10, 3 + rootUnlocks.length * 2) : 0;
+  const estMinutes = activeRootNode ? 10 + Math.min(20, rootUnlocks.length * 3) : 0;
+
+  const startPractice = (subject?: string, concept?: string) => {
+    // Default to the currently-active subject's top root cause (not a hardcoded subject)
+    const topFlaw = activeFlaws[0];
+    const sub = subject || topFlaw?.subject || effectiveSubject || "";
+    const c   = concept || topFlaw?.evidence?.root_concept_name || "";
+    const p   = new URLSearchParams({ v: "questionlist", exam: domain.toLowerCase() });
+    if (sub) p.set("subject", sub);
+    if (c) p.set("concept", c);
+    router.push(`/question_dashboard?${p.toString()}`);
   };
 
-  const handleNextQuestion = () => {
-    setCurrentQuestionIndex((prev) => prev + 1);
-    setSelectedOption(null);
-    setNumericalInput("");
-    setIsAnswerChecked(false);
-    setIsCorrectState(null);
-    setShowExplanation(false);
-    setTimeSpent(0);
-  };
+  const navItems = [
+    { label: "Overview", active: true, path: "/dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="3" width="7" height="7" rx="1.5"/><rect x="14" y="14" width="7" height="7" rx="1.5"/><rect x="3" y="14" width="7" height="7" rx="1.5"/></svg> },
+    { label: "Root Causes", path: "/dashboard/root-causes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg> },
+    { label: "Weak Concepts", path: "/weakness-report", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
+    { label: "Practice", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> },
+    { label: "Mock Tests", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 10h8M8 14h6"/></svg> },
+  ];
 
-  const formatTime = (secs: number) => {
-    const mins = Math.floor(secs / 60);
-    const remainingSecs = secs % 60;
-    return `${mins.toString().padStart(2, "0")}:${remainingSecs.toString().padStart(2, "0")}`;
-  };
+  const glass = "rgba(255,255,255,0.55)";
+  const glassBorder = "1px solid rgba(255,255,255,0.7)";
+  const glassBlur = "blur(20px) saturate(1.2)";
+  const cardShadow = "0 14px 44px -20px rgba(170,110,45,0.32)";
 
-  const cleanLabel = (str: string) => {
-    if (!str) return "";
-    return str
-      .split("-")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
-  };
-
-  const getSeverityStyle = (severity: string) => {
-    const s = (severity || "").toLowerCase();
-    switch (s) {
-      case "critical":
-        return "bg-red-500/10 border-red-500/30 text-red-400";
-      case "high":
-        return "bg-orange-500/10 border-orange-500/30 text-orange-400";
-      case "medium":
-        return "bg-yellow-500/10 border-yellow-500/30 text-yellow-400";
-      case "low":
-      default:
-        return "bg-blue-500/10 border-blue-500/30 text-blue-400";
-    }
-  };
-
-  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => setUploadedLogo(ev.target?.result as string);
-    reader.readAsDataURL(file);
-  };
+  // Branded full-screen loader for the initial data fetch — avoids the flash of
+  // empty "…" placeholder cards before signals/stats arrive.
+  if (loadingSignals && loadingStats) {
+    return (
+      <div role="status" aria-busy="true" aria-label="Loading your dashboard" style={{ minHeight: "100vh", display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 18, background: "linear-gradient(165deg,#FCEFDC 0%,#FBF5EB 46%,#F7E6D2 100%)" }}>
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+        <div style={{ fontWeight: 800, fontSize: 34, letterSpacing: 1.5, background: "linear-gradient(118deg,#F4AB2D,#DE6E1C)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", fontFamily: "system-ui,sans-serif" }}>PAPER</div>
+        <div style={{ width: 40, height: 40, border: "4px solid rgba(224,112,30,0.2)", borderTopColor: "#E0701E", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
+        <div style={{ color: "#8C7D6E", fontSize: 14, fontWeight: 600, fontFamily: "system-ui,sans-serif" }}>Tracing your root causes…</div>
+      </div>
+    );
+  }
 
   return (
-    <div className="flex h-screen bg-[#090d16] text-[#e2e8f0] overflow-hidden" style={{ fontFamily: "'Inter', sans-serif" }}>
-      
-      {/* Hidden file input for logo */}
-      <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleLogoUpload} />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@400;500;600;700;800;900&display=swap');
+        *{box-sizing:border-box;}
+        html,body{margin:0;padding:0;font-family:'Hanken Grotesk',system-ui,sans-serif;}
+        @keyframes glowPulse{0%,100%{box-shadow:0 0 0 0 rgba(244,171,45,0)}50%{box-shadow:0 0 40px 8px rgba(244,171,45,.2)}}
+        @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(0.85)}}
+        @keyframes spin{to{transform:rotate(360deg)}}
+        .nav-btn{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;color:#7C6E60;font-weight:500;font-size:14px;text-decoration:none;cursor:pointer;transition:background .15s,color .15s;background:transparent;border:none;width:100%;}
+        .nav-btn:hover{background:rgba(120,90,50,0.08);color:#D5740E;}
+        .nav-btn.active{background:rgba(236,138,67,0.16);color:#D5740E;font-weight:700;}
+        .fix-btn{border:none;cursor:pointer;font-weight:800;font-size:14.5px;padding:14px 24px;border-radius:13px;background:linear-gradient(120deg,#F2A52A,#E0701E);color:#fff;box-shadow:0 12px 26px -10px rgba(224,112,30,.85);transition:opacity .2s;}
+        .fix-btn:hover{opacity:.9;}
+        .practice-btn{border:none;cursor:pointer;font-weight:700;font-size:12.5px;padding:10px 16px;border-radius:11px;background:rgba(236,138,67,0.15);color:#D5740E;transition:background .15s;}
+        .practice-btn:hover{background:rgba(236,138,67,0.26);}
+        .fix-sm{border:none;cursor:pointer;font-weight:800;font-size:12.5px;padding:10px 16px;border-radius:11px;background:linear-gradient(120deg,#F2A52A,#E0701E);color:#fff;box-shadow:0 10px 20px -10px rgba(224,112,30,.8);white-space:nowrap;transition:opacity .15s;}
+        .fix-sm:hover{opacity:.9;}
+        /* Mobile sidebar drawer — desktop default is the in-flow sidebar */
+        .dash-hamburger{display:none;align-items:center;justify-content:center;width:40px;height:40px;border-radius:11px;border:1px solid rgba(255,255,255,0.8);background:rgba(255,255,255,0.5);color:#7C6E60;cursor:pointer;flex-shrink:0;}
+        .dash-overlay{position:fixed;inset:0;background:rgba(40,25,10,0.38);backdrop-filter:blur(2px);z-index:55;}
+        @media (max-width: 860px){
+          .dash-sidebar{position:fixed !important;left:0;top:0;z-index:60 !important;transform:translateX(-100%);transition:transform .28s ease;box-shadow:0 18px 60px rgba(60,35,10,0.4);}
+          .dash-sidebar.open{transform:translateX(0);}
+          .dash-hamburger{display:inline-flex;}
+        }
+        @media (min-width: 861px){ .dash-overlay{display:none;} }
+      `}</style>
 
-      {/* Sidebar Panel */}
-      <aside className="w-72 bg-[#0d1527] border-r border-[#1e293b] flex flex-col shrink-0 z-10">
-        
-        {/* Sidebar Header */}
-        <div className="p-5 border-b border-[#1e293b] flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            {uploadedLogo ? (
-              <img
-                src={uploadedLogo}
-                alt="Custom Logo"
-                onClick={() => fileInputRef.current?.click()}
-                className="h-8 object-contain cursor-pointer rounded"
-              />
-            ) : (
-              <div 
-                onClick={() => fileInputRef.current?.click()}
-                className="w-8 h-8 bg-orange-500 rounded-xl flex items-center justify-center text-white font-black text-sm shadow-md cursor-pointer hover:bg-orange-600 transition"
-              >
-                V
-              </div>
-            )}
-            <div className="leading-tight">
-              <p className="text-sm font-extrabold text-white">VIA</p>
-              <p className="text-[9px] text-gray-500 font-medium">Smart Study Platform</p>
-            </div>
+      <div style={{ display: "flex", height: "100vh", overflow: "hidden", position: "relative", background: "linear-gradient(165deg,#FCEFDC 0%,#FBF5EB 46%,#F7E6D2 100%)" }}>
+
+        {/* BG GLOW BLOBS */}
+        <div style={{ position: "fixed", top: -150, right: -70, width: 540, height: 540, borderRadius: "50%", background: "radial-gradient(circle,rgba(245,170,60,.4),rgba(245,170,60,0) 68%)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "fixed", bottom: -180, left: 150, width: 520, height: 520, borderRadius: "50%", background: "radial-gradient(circle,rgba(236,138,67,.26),rgba(236,138,67,0) 70%)", pointerEvents: "none", zIndex: 0 }} />
+        <div style={{ position: "fixed", top: "30%", left: "36%", width: 380, height: 380, borderRadius: "50%", background: "radial-gradient(circle,rgba(255,220,150,.22),rgba(255,220,150,0) 70%)", pointerEvents: "none", zIndex: 0 }} />
+
+        {/* Mobile drawer backdrop */}
+        {navOpen && <div className="dash-overlay" onClick={() => setNavOpen(false)} aria-hidden="true" />}
+
+        {/* SIDEBAR */}
+        <aside className={`dash-sidebar${navOpen ? " open" : ""}`} style={{ width: 236, flexShrink: 0, position: "relative", zIndex: 2, background: "rgba(255,253,248,0.72)", backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, borderRight: "1px solid rgba(255,255,255,0.65)", display: "flex", flexDirection: "column", padding: "22px 16px", height: "100vh", overflowY: "auto" }}>
+          <div style={{ padding: "4px 10px 20px" }}>
+            <div style={{ fontWeight: 800, fontSize: 30, letterSpacing: 1.5, background: "linear-gradient(118deg,#F4AB2D,#DE6E1C)", WebkitBackgroundClip: "text", backgroundClip: "text", color: "transparent", lineHeight: 1 }}>PAPER</div>
+            <div style={{ fontSize: 12, color: "#B0A192", fontStyle: "italic", marginTop: 4 }}>We go deeper.</div>
           </div>
-          <span className="text-[9px] px-2 py-0.5 bg-orange-500/10 border border-orange-500/20 text-orange-500 font-black rounded-full">
-            V1.2
-          </span>
-        </div>
-
-        {/* Sidebar Navigation */}
-        <div className="flex-1 overflow-y-auto px-4 py-4 space-y-6">
-          
-          {/* Dashboard Home */}
-          <div className="space-y-2">
-            <button
-              onClick={() => {
-                setActiveSubject(null);
-                setActiveChapter(null);
-                setActiveTopic(null);
-                setActivePractice(false);
-              }}
-              className={`w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition text-sm font-bold border ${
-                !activeSubject && !activePractice
-                  ? "bg-orange-500 text-white border-orange-600 shadow-lg shadow-orange-500/10"
-                  : "text-gray-400 hover:text-white bg-transparent border-transparent hover:bg-[#16223f]"
-              }`}
-            >
-              <span>📊</span>
-              <span>Dashboard Overview</span>
-            </button>
-
-            <button
-              onClick={() => router.push("/audit")}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl transition text-sm font-bold border text-gray-400 hover:text-white bg-transparent border-transparent hover:bg-[#16223f]"
-            >
-              <span>🛡️</span>
-              <span>Auditor Panel</span>
-            </button>
-          </div>
-
-          {/* Subject Selector Accordion */}
-          <div className="space-y-2">
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest px-1">
-              Subjects & Topics
-            </p>
-
-            {["Physics", "Chemistry", "Mathematics"].map((subj) => {
-              const isActiveSubj = activeSubject === subj;
-              const emoji = subj === "Physics" ? "⚡" : subj === "Chemistry" ? "🧪" : "📐";
-              
-              return (
-                <div key={subj} className="space-y-1">
-                  <button
-                    onClick={() => {
-                      setActiveSubject(subj);
-                      setActiveChapter(null);
-                      setActiveTopic(null);
-                      setActivePractice(false);
-                    }}
-                    className={`w-full flex items-center justify-between px-4 py-3 rounded-2xl transition text-sm font-bold border ${
-                      isActiveSubj
-                        ? "bg-[#16223f] border-[#1e293b] text-white"
-                        : "text-gray-400 hover:text-white bg-transparent border-transparent hover:bg-[#111a2f]"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <span>{emoji}</span>
-                      <span>{subj}</span>
-                    </div>
-                    {isActiveSubj && (
-                      <span className="text-xs text-orange-500 font-black">●</span>
-                    )}
-                  </button>
-
-                  {/* Expanded chapters & topics */}
-                  {isActiveSubj && (
-                    <div className="pl-6 pr-2 py-1 space-y-2 border-l border-[#1e293b] ml-4 mt-1">
-                      
-                      {/* Button to practice whole subject */}
-                      <button
-                        onClick={() => startPractice(subj, null, null)}
-                        className="w-full text-left py-1.5 px-3 text-xs font-bold text-orange-400 hover:text-orange-300 transition-colors flex items-center gap-1.5 bg-orange-500/5 border border-orange-500/10 rounded-lg hover:bg-orange-500/10"
-                      >
-                        🚀 Practice Whole Subject
-                      </button>
-
-                      {loadingChapters ? (
-                        <p className="text-[10px] text-gray-500 px-3">Loading topics...</p>
-                      ) : chapters.length === 0 ? (
-                        <p className="text-[10px] text-gray-500 px-3">No topics mapped</p>
-                      ) : (
-                        chapters.map((chap) => {
-                          const isChapExpanded = expandedChapter === chap.name;
-                          return (
-                            <div key={chap.name} className="space-y-1">
-                              {/* Chapter Accordion Trigger */}
-                              <button
-                                onClick={() => setExpandedChapter(isChapExpanded ? null : chap.name)}
-                                className={`w-full text-left py-1.5 px-3 rounded-lg text-xs font-bold flex justify-between items-center transition ${
-                                  activeChapter === chap.name
-                                    ? "bg-[#1e293b] text-white"
-                                    : "text-gray-400 hover:text-white hover:bg-[#111a2f]"
-                                }`}
-                              >
-                                <span className="truncate flex-1 pr-1">{chap.name}</span>
-                                <span className="text-[9px] text-gray-500 shrink-0">
-                                  {isChapExpanded ? "▲" : "▼"}
-                                </span>
-                              </button>
-
-                              {/* Chapter topics */}
-                              {isChapExpanded && (
-                                <div className="pl-3 py-1 space-y-1">
-                                  {/* Practice whole chapter option */}
-                                  <button
-                                    onClick={() => startPractice(subj, chap.name, null)}
-                                    className="w-full text-left py-1 px-2 text-[10px] font-bold text-gray-400 hover:text-white transition-colors border-l border-orange-500/30"
-                                  >
-                                    📖 Practice Entire Chapter
-                                  </button>
-
-                                  {chap.topics.map((topic) => (
-                                    <button
-                                      key={topic}
-                                      onClick={() => startPractice(subj, chap.name, topic)}
-                                      className={`w-full text-left py-1 px-2 rounded-md text-[10px] font-medium truncate block transition ${
-                                        activeTopic === topic && activePractice
-                                          ? "text-orange-400 font-extrabold bg-orange-500/5"
-                                          : "text-gray-500 hover:text-gray-300"
-                                      }`}
-                                      title={cleanLabel(topic)}
-                                    >
-                                      • {cleanLabel(topic)}
-                                    </button>
-                                  ))}
-                                </div>
-                              )}
-                            </div>
-                          );
-                        })
-                      )}
-                    </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
-
-        </div>
-
-        {/* Sidebar Footer User Info */}
-        <div className="p-4 border-t border-[#1e293b] flex items-center justify-between bg-[#0a0f1d]">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="shrink-0 scale-95">
-              <UserButton />
-            </div>
-            {isLoaded && user && (
-              <div className="leading-tight min-w-0">
-                <p className="text-xs font-bold text-white truncate">
-                  {user.fullName || "Student"}
-                </p>
-                <p className="text-[9px] text-gray-500 truncate">
-                  {user.primaryEmailAddress?.emailAddress}
-                </p>
-              </div>
-            )}
-          </div>
-          <button 
-            onClick={() => router.push("/weakness-report")}
-            className="text-[10px] font-black text-orange-500 hover:text-orange-400 transition"
-            title="View weakness report page"
-          >
-            Report →
-          </button>
-        </div>
-      </aside>
-
-      {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-        
-        {/* Glow effects */}
-        <div className="absolute w-[600px] h-[600px] bg-orange-500/5 blur-[150px] rounded-full top-[-100px] right-[-100px] pointer-events-none" />
-        <div className="absolute w-[600px] h-[600px] bg-blue-500/5 blur-[150px] rounded-full bottom-[-100px] left-[-100px] pointer-events-none" />
-
-        {/* Top Header Panel */}
-        <header className="h-16 bg-[#0d1527]/80 backdrop-blur border-b border-[#1e293b] px-8 flex items-center justify-between shrink-0 relative z-10">
-          <div>
-            {activePractice ? (
-              <div className="flex items-center gap-2 text-xs">
-                <span className="text-gray-500">Practice Session</span>
-                <span className="text-gray-600">/</span>
-                <span className="text-orange-500 font-bold">{activeSubject}</span>
-                {activeChapter && (
-                  <>
-                    <span className="text-gray-600">/</span>
-                    <span className="text-gray-300 font-semibold truncate max-w-[150px] inline-block align-bottom">{activeChapter}</span>
-                  </>
-                )}
-                {activeTopic && (
-                  <>
-                    <span className="text-gray-600">/</span>
-                    <span className="text-white font-extrabold truncate max-w-[150px] inline-block align-bottom">{cleanLabel(activeTopic)}</span>
-                  </>
-                )}
-              </div>
-            ) : (
-              <h1 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                <span className="w-1.5 h-5 bg-orange-500 rounded-full inline-block" />
-                {activeSubject ? `${activeSubject} Overview` : "Academic Dashboard Overview"}
-              </h1>
-            )}
-          </div>
-
-          <div className="flex items-center gap-4">
-            {activePractice && (
-              <button
-                onClick={() => {
-                  setActivePractice(false);
-                  setActiveChapter(null);
-                  setActiveTopic(null);
-                }}
-                className="text-xs text-rose-400 border border-rose-500/20 hover:border-rose-500/50 hover:bg-rose-500/5 px-3 py-1.5 rounded-xl transition font-bold"
-              >
-                ✕ Close Practice
+          <nav style={{ display: "flex", flexDirection: "column", gap: 3, flex: 1 }}>
+            {navItems.map(item => (
+              <button key={item.label} className={`nav-btn${item.active ? " active" : ""}`} onClick={() => { setNavOpen(false); if (item.path) router.push(item.path); }}>
+                {item.icon}{item.label}
               </button>
+            ))}
+          </nav>
+          <div style={{ marginTop: 14, padding: 12, border: "1px solid rgba(255,255,255,0.7)", background: "rgba(255,255,255,0.5)", borderRadius: 15, display: "flex", alignItems: "center", gap: 11 }}>
+            <UserButton />
+            {isLoaded && user && (
+              <div style={{ minWidth: 0 }}>
+                <div style={{ fontSize: 13.5, fontWeight: 700, color: "#2E2620", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{user.fullName || user.firstName || "Student"}</div>
+                <div style={{ fontSize: 11.5, color: "#A89A8C" }}>{domain} · Student</div>
+              </div>
             )}
-            <div className="bg-[#16223f] border border-[#1e293b] text-gray-300 text-[10px] md:text-xs px-3 py-1.5 rounded-lg font-bold">
-              🎓 Target: JEE Advanced
-            </div>
           </div>
-        </header>
+        </aside>
 
-        {/* Dynamic Inner Content Body */}
-        <div className="flex-1 overflow-y-auto p-6 md:p-8 relative z-10">
-          
-          <AnimatePresence mode="wait">
-            {!activePractice ? (
-              
-              /* ========================================================
-                 MODE 1: DASHBOARD OVERVIEW MODE
-                 ======================================================== */
-              <motion.div
-                key="overview"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="space-y-8"
-              >
-                {/* Greeting & Header */}
-                <div className="space-y-1">
-                  <h2 className="text-2xl md:text-3xl font-black text-white tracking-wide">
-                    Welcome back, {user?.firstName || "Student"}! ✨
-                  </h2>
-                  <p className="text-xs md:text-sm text-gray-400">
-                    Track your conceptual mastery, identify root faults, and solve practice feeds.
-                  </p>
+        {/* MAIN */}
+        <main style={{ flex: 1, overflowY: "auto", height: "100vh", position: "relative", zIndex: 1 }}>
+          <div style={{ maxWidth: 1280, margin: "0 auto", padding: "30px clamp(20px,3vw,48px) 80px" }}>
+
+            {/* HEADER */}
+            <header style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 16, flexWrap: "wrap", marginBottom: 20 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                <button className="dash-hamburger" onClick={() => setNavOpen(true)} aria-label="Open navigation menu" aria-expanded={navOpen}>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+                </button>
+                <div>
+                <h1 style={{ fontSize: "clamp(21px,2.8vw,27px)", fontWeight: 800, color: "#2E2620", margin: 0, letterSpacing: -0.3 }}>
+                  Welcome back, {isLoaded ? (user?.firstName || "Student") : "…"} 👋
+                </h1>
+                <p style={{ margin: "6px 0 0", color: "#8C7D6E", fontSize: 14.5 }}>Here&apos;s what to fix first — and exactly why it matters.</p>
                 </div>
+              </div>
+              <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "9px 14px", border: "1px solid rgba(255,255,255,0.8)", background: "rgba(255,255,255,0.5)", borderRadius: 11, color: "#7C6E60", fontSize: 13, fontWeight: 600, backdropFilter: "blur(8px)" }}>
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="4" y="5" width="16" height="16" rx="2"/><path d="M4 9h16M9 3v4M15 3v4"/></svg>
+                {todayStr}
+              </div>
+            </header>
 
-                {/* Progress KPI Card Grid */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[
-                    {
-                      label: "Overall Accuracy Rate",
-                      value: loadingStats ? "..." : `${accuracyRate}%`,
-                      subtext: "Across all subjects",
-                      icon: "🎯",
-                      color: "text-orange-500"
-                    },
-                    {
-                      label: "Questions Attempted",
-                      value: loadingStats ? "..." : attemptsCount,
-                      subtext: "Logged attempts",
-                      icon: "📝",
-                      color: "text-blue-400"
-                    },
-                    {
-                      label: "Active Root Flaws",
-                      value: loadingSignals ? "..." : rootFlaws.length,
-                      subtext: "Critical concept blocks",
-                      icon: "⚠️",
-                      color: "text-rose-400"
-                    },
-                    {
-                      label: "Concept Coverage",
-                      value: "74%",
-                      subtext: "Estimated coverage",
-                      icon: "📚",
-                      color: "text-emerald-400"
-                    }
-                  ].map((stat, i) => (
-                    <div
-                      key={i}
-                      className="bg-[#0d1527] border border-[#1e293b] rounded-3xl p-5 hover:border-gray-700 transition duration-300"
-                    >
-                      <div className="flex justify-between items-start">
-                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                          {stat.label}
-                        </span>
-                        <span className="text-xl">{stat.icon}</span>
+            {isNew ? (
+              /* ── NEW USER STATE ── */
+              <>
+                <section style={{ position: "relative", overflow: "hidden", borderRadius: 24, padding: "48px 40px", marginBottom: 20, background: "linear-gradient(135deg,rgba(255,247,227,0.85),rgba(255,237,203,0.74))", border: "1px solid rgba(243,214,147,0.85)", backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, textAlign: "center", animation: "glowPulse 6s ease-in-out infinite" }}>
+                  <div style={{ position: "absolute", top: "-50%", left: "50%", transform: "translateX(-50%)", width: 480, height: 480, background: "radial-gradient(circle,rgba(255,196,86,.42),rgba(255,196,86,0) 70%)", pointerEvents: "none" }} />
+                  <div style={{ position: "relative", maxWidth: 560, margin: "0 auto" }}>
+                    <div style={{ width: 78, height: 78, margin: "0 auto 22px", borderRadius: 24, background: "rgba(255,255,255,0.75)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", display: "flex", alignItems: "center", justifyContent: "center", boxShadow: "0 14px 30px -12px rgba(224,150,30,.55)" }}>
+                      <svg width="38" height="38" viewBox="0 0 24 24" fill="none" stroke="#E0902F" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.4-3.4"/><path d="M11 8v6M8 11h6" stroke="#F2A52A"/></svg>
+                    </div>
+                    <h2 style={{ fontSize: "clamp(22px,3vw,30px)", fontWeight: 800, color: "#3A2B12", margin: 0, lineHeight: 1.25 }}>Keep solving — I&apos;m still learning your patterns.</h2>
+                    <p style={{ fontSize: 16, color: "#7A5A1E", margin: "14px 0 0", lineHeight: 1.55 }}>A few more questions and I&apos;ll pinpoint exactly where you&apos;re losing marks — and trace it to the one concept causing it.</p>
+                    <div style={{ maxWidth: 420, margin: "26px auto 0" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", fontSize: 12.5, fontWeight: 700, color: "#8A6A22", marginBottom: 8 }}>
+                        <span>Analysing your patterns</span><span>{attemptsCount} of 20 analysed</span>
                       </div>
-                      <p className="text-3xl font-black text-white mt-3 leading-none">
-                        {stat.value}
-                      </p>
-                      <p className="text-[10px] text-gray-500 mt-2 font-medium">
-                        {stat.subtext}
-                      </p>
+                      <div style={{ height: 12, background: "rgba(180,130,40,.22)", borderRadius: 8, overflow: "hidden" }}>
+                        <div style={{ height: "100%", width: `${(attemptsCount / 20) * 100}%`, background: "linear-gradient(120deg,#F2A52A,#E0701E)", borderRadius: 8 }} />
+                      </div>
+                      <div style={{ fontSize: 12, color: "#A8852E", marginTop: 9 }}>{20 - attemptsCount} more questions until I can confidently show your root cause.</div>
+                    </div>
+                    <button className="fix-btn" style={{ marginTop: 26 }} onClick={() => router.push("/question_dashboard")}>Solve practice questions →</button>
+                  </div>
+                </section>
+
+                {/* locked preview cards */}
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(240px,1fr))", gap: 16, marginBottom: 18 }}>
+                  {["Root Cause Map", "Weak Concepts", "Micro Weaknesses"].map(label => (
+                    <div key={label} style={{ background: glass, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: glassBorder, borderRadius: 18, padding: 20 }}>
+                      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 14 }}>
+                        <span style={{ fontSize: 14, fontWeight: 700, color: "#9A8B7C" }}>{label}</span>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="#C3B4A2" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg>
+                      </div>
+                      {[80, 60, 70].map((w, i) => <div key={i} style={{ height: 11, background: "rgba(120,90,50,.1)", borderRadius: 6, width: `${w}%`, marginBottom: i < 2 ? 9 : 0 }} />)}
+                      <div style={{ marginTop: 14, fontSize: 12, color: "#B0A192", fontWeight: 600 }}>Unlocks at 20 questions</div>
                     </div>
                   ))}
                 </div>
-
-                {/* Flagship Engine: Root Flaws Detected */}
-                <div className="bg-gradient-to-br from-orange-500/10 via-orange-500/5 to-transparent rounded-3xl border border-orange-500/20 p-6 md:p-8 shadow-2xl relative overflow-hidden backdrop-blur-md">
-                  <div className="absolute -right-20 -top-20 w-40 h-40 bg-orange-500/10 rounded-full blur-3xl pointer-events-none" />
-                  
-                  <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-                    <div className="flex items-center gap-3">
-                      <span className="text-2xl">🎯</span>
-                      <div>
-                        <h3 className="text-sm font-black text-white uppercase tracking-wider flex items-center gap-2">
-                          Root Flaws Detected
-                          <span className="bg-orange-500 text-white text-[9px] font-black px-2 py-0.5 rounded-md animate-pulse">
-                            Flagship Diagnostic Engine
-                          </span>
-                        </h3>
-                        <p className="text-[11px] text-gray-400">
-                          PAPER's prerequisite dependency analysis shows which foundation errors are causing your weaknesses.
-                        </p>
+              </>
+            ) : (
+              /* ── ESTABLISHED USER ── */
+              <>
+                {/* HERO — ROOT CAUSE MAP */}
+                <section style={{ position: "relative", overflow: "hidden", borderRadius: 28, padding: "36px 40px", marginBottom: 24, background: "linear-gradient(135deg,rgba(255,247,227,0.82),rgba(255,237,203,0.72))", border: "1px solid rgba(243,214,147,0.85)", backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, animation: "glowPulse 6s ease-in-out infinite" }}>
+                  <div style={{ position: "absolute", top: "-40%", right: "-3%", width: 480, height: 480, background: "radial-gradient(circle,rgba(255,196,86,.5),rgba(255,196,86,0) 70%)", pointerEvents: "none" }} />
+                  <div style={{ position: "relative" }}>
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
+                      <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 800, letterSpacing: 1.4, color: "#B97A12", textTransform: "uppercase" }}>
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/></svg>
+                        Root Cause Map · We go deeper
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                        {lastRefreshed && (
+                          <div style={{ fontSize: 12, display: "flex", alignItems: "center", gap: 5, color: "#A89A8C" }}>
+                            {liveUpdating
+                              ? <><svg style={{ animation: "spin 1s linear infinite" }} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#C7600F" strokeWidth="2.5" strokeLinecap="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg><span style={{ color: "#C7600F", fontWeight: 600 }}>Updating…</span></>
+                              : <><div style={{ width: 7, height: 7, borderRadius: "50%", background: "#2FB060", animation: "livePulse 2.5s ease-in-out infinite" }} /><span style={{ fontWeight: 600 }}>Live</span></>
+                            }
+                          </div>
+                        )}
+                        <button onClick={() => router.push("/dashboard/root-causes")}
+                          style={{ display: "flex", alignItems: "center", gap: 6, fontSize: 12.5, fontWeight: 700, color: "#C7600F", background: "rgba(255,255,255,0.5)", border: "1.5px solid rgba(199,96,15,0.3)", borderRadius: 20, padding: "6px 14px", cursor: "pointer" }}>
+                          See all {rootFlaws.length > 0 ? `${rootFlaws.length} ` : ""}root causes
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                        </button>
                       </div>
                     </div>
-                    <button
-                      onClick={() => router.push("/weakness-report")}
-                      className="text-xs text-orange-500 bg-orange-500/5 hover:bg-orange-500/10 px-4 py-2 rounded-xl border border-orange-500/20 font-bold transition"
-                    >
-                      Full Weakness Report →
-                    </button>
+                    {/* Per-subject selector — adapts to JEE (Physics/Chem/Maths) or NEET (Physics/Chem/Bio) from the data */}
+                    {subjectOrder.length > 0 && (
+                      <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 18 }}>
+                        {subjectOrder.map(subj => {
+                          const active = subj === effectiveSubject;
+                          const count = subjectGroups[subj].length;
+                          return (
+                            <button key={subj} onClick={() => setActiveSubject(subj)}
+                              style={{
+                                display: "inline-flex", alignItems: "center", gap: 7, padding: "6px 14px", borderRadius: 20,
+                                fontSize: 13, fontWeight: 700, cursor: "pointer",
+                                background: active ? "linear-gradient(120deg,#F2A52A,#E0701E)" : "rgba(255,255,255,0.55)",
+                                color: active ? "#fff" : "#9A7A3E",
+                                border: active ? "1.5px solid transparent" : "1.5px solid rgba(199,96,15,0.25)",
+                                boxShadow: active ? "0 8px 18px -8px rgba(224,112,30,.7)" : "none",
+                                transition: "all .15s",
+                              }}>
+                              {subj}
+                              <span style={{ fontSize: 11, fontWeight: 800, padding: "1px 7px", borderRadius: 12, background: active ? "rgba(255,255,255,0.28)" : "rgba(199,96,15,0.12)", color: active ? "#fff" : "#C7600F" }}>{count}</span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+                    <h2 style={{ fontSize: "clamp(22px,2.8vw,32px)", lineHeight: 1.25, fontWeight: 800, color: "#3A2B12", margin: 0, letterSpacing: -0.4 }}>
+                      {loadingSignals ? "Analysing your patterns…" : chain.length === 0 ? "No root causes detected yet." : chain.length === 1
+                        ? <>Your biggest gap right now is <span style={{ color: "#C7600F" }}>{surfaceName}</span>. Fix this first.</>
+                        : <>Your marks lost in <span style={{ color: "#C7600F" }}>{surfaceName}</span> trace back to <span style={{ color: "#C7600F" }}>{rootName}</span>.</>
+                      }
+                    </h2>
+                    <p style={{ margin: "11px 0 0", fontSize: 16, color: "#7A5A1E", lineHeight: 1.55, maxWidth: 720 }}>
+                      {chain.length === 1
+                        ? "This is a foundational topic you practiced and struggled with. Fixing it will unblock everything that builds on it."
+                        : "This root concept is weaker than the topic it feeds into. Fix the foundation and the symptom recovers automatically."}
+                    </p>
+
+                    {/* TOP 2 CHAINS for the active subject */}
+                    {topChains.map((ch, ci) => (
+                      <div key={ci} style={{ marginTop: ci === 0 ? 26 : 20 }}>
+                        {topChains.length > 1 && (
+                          <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 9 }}>
+                            <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: .5, textTransform: "uppercase", color: "#B97A12", background: "rgba(240,183,72,.22)", border: "1px solid rgba(240,183,72,.5)", borderRadius: 20, padding: "3px 11px" }}>
+                              {ci === 0 ? "#1 — Biggest gap" : "#2 — Next gap"}
+                            </span>
+                            <div style={{ flex: 1, height: 1, background: "rgba(180,130,40,.22)" }} />
+                          </div>
+                        )}
+                      <div style={{ display: "flex", alignItems: "stretch", gap: 0, overflowX: "auto" }}>
+                        {ch.map((node, idx) => (
+                          <div key={idx} style={{ display: "flex", alignItems: "center", flex: node.root ? 1.1 : 1, minWidth: 200 }}>
+                            {node.root ? (
+                              <div style={{ flex: 1, alignSelf: "stretch", background: "linear-gradient(140deg,rgba(255,231,176,0.95),rgba(255,205,127,0.9))", border: "1.5px solid rgba(238,183,72,0.95)", borderRadius: 20, padding: 22, display: "flex", flexDirection: "column", gap: 11, boxShadow: "0 18px 40px -16px rgba(224,150,30,0.6)" }}>
+                                <div style={{ display: "inline-flex", alignItems: "center", gap: 6, fontSize: 11, fontWeight: 800, letterSpacing: .7, textTransform: "uppercase", color: "#B97A12" }}>
+                                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
+                                  {ch.length === 1 ? "Your root gap" : "The root cause"}
+                                </div>
+                                <div style={{ fontSize: 18, fontWeight: 800, color: "#5A3D0A", lineHeight: 1.2 }}>{node.name}</div>
+                                <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                                  <span style={{ fontSize: 32, fontWeight: 800, color: "#5A3D0A" }}>{node.mastery}%</span>
+                                  <span style={{ fontSize: 11, color: "#A8852E" }}>mastery — start here</span>
+                                </div>
+                                <div style={{ height: 8, background: "rgba(180,130,40,.28)", borderRadius: 6, overflow: "hidden" }}>
+                                  <div style={{ height: "100%", width: `${node.mastery}%`, background: "#E0902F", borderRadius: 6 }} />
+                                </div>
+                                {/* Accuracy + attempts */}
+                                {(node as any).attempts > 0 && (
+                                  <div style={{ display: "flex", gap: 14, flexWrap: "wrap" }}>
+                                    <div style={{ fontSize: 12, color: "#7A5A1E", fontWeight: 700 }}>
+                                      {(node as any).attempts} attempts · {(node as any).accuracy}% accuracy
+                                    </div>
+                                  </div>
+                                )}
+                                {/* Unlocks */}
+                                {(node as any).unlocks?.length > 0 && (
+                                  <div style={{ borderTop: "1px dashed rgba(180,130,40,.3)", paddingTop: 10 }}>
+                                    <div style={{ fontSize: 11, fontWeight: 800, color: "#B97A12", letterSpacing: .4, marginBottom: 7, textTransform: "uppercase" }}>
+                                      Fixing this improves:
+                                    </div>
+                                    <div style={{ display: "flex", flexWrap: "wrap", gap: 6 }}>
+                                      {(node as any).unlocks.slice(0, 4).map((u: string) => (
+                                        <span key={u} style={{ fontSize: 11.5, fontWeight: 700, color: "#5A3D0A", background: "rgba(255,255,255,0.55)", border: "1px solid rgba(180,130,40,.35)", borderRadius: 20, padding: "3px 10px" }}>
+                                          {u}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                <div style={{ fontSize: 12.5, color: "#7A5A1E", lineHeight: 1.4, borderTop: "1px dashed rgba(180,130,40,.3)", paddingTop: 10 }}>{node.because}</div>
+                              </div>
+                            ) : (
+                              <>
+                                <div style={{ flex: 1, alignSelf: "stretch", background: "rgba(255,255,255,0.55)", backdropFilter: "blur(8px)", WebkitBackdropFilter: "blur(8px)", border: "1px solid rgba(255,255,255,0.8)", borderRadius: 18, padding: 20, display: "flex", flexDirection: "column", gap: 11 }}>
+                                  <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: .6, textTransform: "uppercase", color: "#B58A52" }}>{node.step}</div>
+                                  <div style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26", lineHeight: 1.2 }}>{node.name}</div>
+                                  <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
+                                    <span style={{ fontSize: 28, fontWeight: 800, color: "#3A2E26" }}>{node.mastery}%</span>
+                                    <span style={{ fontSize: 11, color: "#9A8B7C" }}>mastery</span>
+                                  </div>
+                                  <div style={{ height: 8, background: "rgba(120,90,50,.13)", borderRadius: 6, overflow: "hidden" }}>
+                                    <div style={{ height: "100%", width: `${node.mastery}%`, background: "#CDA06A", borderRadius: 6 }} />
+                                  </div>
+                                  {(node as any).attempts > 0 && (
+                                    <div style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 700 }}>
+                                      {(node as any).attempts} attempts · {(node as any).accuracy}% accuracy
+                                    </div>
+                                  )}
+                                  {node.because && <div style={{ fontSize: 12, color: "#8C7D6E", fontStyle: "italic", lineHeight: 1.4, borderTop: "1px dashed rgba(120,90,50,.18)", paddingTop: 10 }}>↓ {node.because}</div>}
+                                </div>
+                                {/* Arrow to next node */}
+                                <div style={{ flexShrink: 0, padding: "0 8px", color: "#D8B98A", display: "flex", alignItems: "center" }}>
+                                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round"><path d="m9 6 6 6-6 6"/></svg>
+                                </div>
+                              </>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                      </div>
+                    ))}
+
+                    {/* ACTION BAR */}
+                    <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap", marginTop: 22, background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.85)", borderRadius: 18, padding: "18px 24px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: 30, flexWrap: "wrap" }}>
+                        <div>
+                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .6, textTransform: "uppercase", color: "#A2937F" }}>Recommended action</div>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26", marginTop: 4 }}>Start at the foundation</div>
+                        </div>
+                        <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Est. gain</span><span style={{ fontSize: 17, fontWeight: 800, color: "#1F8A5B" }}>{estGainHi > 0 ? `+${estGainLo} to +${estGainHi} marks` : "—"}</span></div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Topics it unblocks</span><span style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26" }}>{rootUnlocks.length}</span></div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Est. focus time</span><span style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26" }}>{estMinutes > 0 ? `~${estMinutes} min` : "—"}</span></div>
+                        </div>
+                      </div>
+                      <button className="fix-btn" onClick={() => startPractice(effectiveSubject, activeFlaws[0]?.evidence?.root_concept_name)}>Fix This Now →</button>
+                    </div>
+                  </div>
+                </section>
+
+                {/* WEAK CONCEPTS */}
+                <section style={{ background: glass, backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, border: glassBorder, borderRadius: 26, padding: "30px 32px", marginBottom: 22, boxShadow: cardShadow }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Weak Concepts</h3>
+                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>Fix these in order — weakest first.</p>
+                    </div>
+                    <span style={{ fontSize: 12, fontWeight: 700, color: "#A89A8C", background: "rgba(120,90,50,0.08)", padding: "6px 14px", borderRadius: 20 }}>Priority order</span>
                   </div>
 
                   {loadingSignals ? (
-                    <div className="py-6 text-center text-gray-500 text-xs">Analyzing prerequisites...</div>
-                  ) : rootFlaws.length === 0 ? (
-                    <div className="bg-[#090d16]/50 border border-[#1e293b]/50 rounded-2xl p-6 text-center text-xs text-gray-400">
-                      ✨ Excellent! No structural root flaws detected in your database yet. Run practice sessions to populate metrics.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
-                      {rootFlaws.slice(0, 3).map((flaw) => {
-                        const rootConcept = flaw.evidence?.root_concept_name || "Prerequisite Concept";
-                        const weakConcept = flaw.evidence?.weak_concept_name || "Target Concept";
-                        const rootMastery = flaw.evidence?.root_mastery ?? 0;
-                        const weakMastery = flaw.evidence?.weak_mastery ?? 0;
-                        
-                        return (
-                          <div
-                            key={flaw.id}
-                            className="bg-[#0d1527] border border-[#1e293b] hover:border-orange-500/30 rounded-2xl p-5 shadow-lg flex flex-col justify-between transition hover:scale-[1.01]"
-                          >
-                            <div className="space-y-4">
-                              <div className="flex justify-between items-center gap-1.5 flex-wrap">
-                                <span className={`text-[9px] font-black px-2 py-0.5 rounded border ${getSeverityStyle(flaw.severity)}`}>
-                                  {flaw.severity}
-                                </span>
-                                <span className="text-[9px] text-gray-500 font-bold">
-                                  Prereq Strength: {flaw.evidence?.relationship_strength || 8}/10
-                                </span>
-                              </div>
-
-                              <div>
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Actual Problem</p>
-                                <p className="text-sm font-black text-orange-400">{cleanLabel(rootConcept)}</p>
-                              </div>
-
-                              <div>
-                                <p className="text-[10px] font-bold text-gray-500 uppercase tracking-wide">Concept Suffered</p>
-                                <p className="text-xs font-bold text-white leading-tight">{cleanLabel(weakConcept)}</p>
-                              </div>
-
-                              <p className="text-xs text-orange-200/90 leading-relaxed italic bg-orange-950/20 border border-orange-500/10 p-2.5 rounded-xl whitespace-pre-wrap">
-                                {flaw.insightMessage}
-                              </p>
-                            </div>
-
-                            <div className="border-t border-[#1e293b] pt-4 mt-4 space-y-4">
-                              {/* Visual comparison bar */}
-                              <div className="space-y-1">
-                                <div className="flex justify-between text-[9px] font-bold text-gray-400">
-                                  <span>Root Concept Mastery</span>
-                                  <span className="text-orange-400">{rootMastery}%</span>
-                                </div>
-                                <div className="h-1 bg-[#090d16] rounded-full overflow-hidden">
-                                  <div className="h-full bg-orange-500 rounded-full" style={{ width: `${rootMastery}%` }} />
-                                </div>
-                              </div>
-
-                              <button
-                                onClick={() => startPractice(flaw.evidence?.subject || "Physics", null, rootConcept)}
-                                className="w-full bg-orange-500 hover:bg-orange-600 text-white font-extrabold text-xs py-2 rounded-xl transition shadow"
-                              >
-                                Fix Foundation Practice →
-                              </button>
-                            </div>
+                    <div style={{ padding: "24px 0", fontSize: 14, color: "#A89A8C" }}>Scanning concept signals…</div>
+                  ) : concepts.length === 0 ? (
+                    <div style={{ padding: "24px 0", fontSize: 14, color: "#A89A8C", textAlign: "center" }}>🎉 No weak concepts detected yet. Keep practising!</div>
+                  ) : concepts.map((item, i) => (
+                    <div key={i} style={{ display: "flex", alignItems: "center", gap: 18, padding: "18px 0", borderTop: "1px solid rgba(120,90,50,.1)" }}>
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <div style={{ display: "flex", alignItems: "center", gap: 10, flexWrap: "wrap" }}>
+                          <span style={{ fontSize: 16, fontWeight: 700, color: "#3A2E26" }}>{item.name}</span>
+                          {item.subj && <span style={{ fontSize: 11.5, fontWeight: 700, color: "#7A6B5C", background: "rgba(120,90,50,.1)", padding: "3px 10px", borderRadius: 20 }}>{item.subj}</span>}
+                          {item.isRoot && <span style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: .4, color: "#B97A12", background: "rgba(240,183,72,.25)", border: "1px solid rgba(240,183,72,.55)", padding: "3px 10px", borderRadius: 20 }}>ROOT CAUSE</span>}
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 13, marginTop: 11 }}>
+                          <div style={{ flex: 1, maxWidth: 340, height: 10, background: "rgba(120,90,50,.12)", borderRadius: 6, overflow: "hidden" }}>
+                            <div style={{ height: "100%", width: `${item.mastery}%`, background: "#D6985A", borderRadius: 6 }} />
                           </div>
-                        );
-                      })}
+                          <span style={{ fontSize: 14, fontWeight: 800, color: "#3A2E26" }}>{item.mastery}%</span>
+                        </div>
+                      </div>
+                      <div style={{ textAlign: "right", flexShrink: 0, minWidth: 90 }}>
+                        <div style={{ fontSize: 11, color: "#9A8B7C", fontWeight: 600 }}>Est. gain</div>
+                        <div style={{ fontSize: 16, fontWeight: 800, color: "#1F8A5B" }}>+{item.gain} marks</div>
+                      </div>
+                      {item.isRoot
+                        ? <button className="fix-sm" onClick={() => startPractice(item.subj, item.name)}>Fix This Now →</button>
+                        : <button className="practice-btn" onClick={() => startPractice(item.subj, item.name)}>Practice →</button>
+                      }
                     </div>
+                  ))}
+
+                  {concepts.length > 0 && (
+                  <div style={{ marginTop: 16, display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "#A89A8C", background: "rgba(250,245,236,0.6)", borderRadius: 12, padding: "11px 14px" }}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8h.01"/></svg>
+                    Showing concepts across all subjects — {[...new Set(concepts.map(c => c.subj).filter(Boolean))].join(", ") || domain}.
+                  </div>
                   )}
-                </div>
 
-                {/* Additional Insight Blocks: Time Traps & Weaknesses */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                  
-                  {/* Time Traps identified */}
-                  <div className="bg-[#0d1527] border border-[#1e293b] rounded-3xl p-6 space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">⏱</span>
+                  <button
+                    onClick={() => router.push("/dashboard/weakness")}
+                    style={{ marginTop: 18, width: "100%", display: "flex", alignItems: "center", justifyContent: "center", gap: 10, padding: "15px 24px", borderRadius: 16, border: "1.5px solid rgba(224,112,30,0.35)", background: "linear-gradient(135deg,rgba(255,247,227,0.85),rgba(255,237,203,0.75))", cursor: "pointer", transition: "box-shadow .2s, transform .2s" }}
+                    onMouseEnter={e => { e.currentTarget.style.boxShadow = "0 12px 28px -12px rgba(224,112,30,.45)"; e.currentTarget.style.transform = "translateY(-2px)"; }}
+                    onMouseLeave={e => { e.currentTarget.style.boxShadow = "none"; e.currentTarget.style.transform = "none"; }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#C7600F" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+                    <span style={{ fontSize: 15, fontWeight: 800, color: "#C7600F", letterSpacing: -0.2 }}>See Your Full Weakness Report</span>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#C7600F" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
+                  </button>
+                </section>
+
+                {/* MICRO WEAKNESSES */}
+                <section style={{ background: glass, backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, border: glassBorder, borderRadius: 26, padding: "30px 32px", marginBottom: 22, boxShadow: cardShadow }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
+                    <div>
+                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Micro Weaknesses</h3>
+                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>The exact mistakes — ranked by marks lost.</p>
+                    </div>
+                    <button onClick={() => router.push("/weakness-report")} style={{ fontSize: 13.5, fontWeight: 700, color: "#D5740E", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>View all</button>
+                  </div>
+
+                  {loadingSignals ? (
+                    <div style={{ padding: "24px 0", fontSize: 14, color: "#A89A8C" }}>Scanning…</div>
+                  ) : microWeaknesses.length === 0 ? (
+                    <div style={{ padding: "24px 0", fontSize: 14, color: "#A89A8C", textAlign: "center" }}>🎉 No micro-weaknesses yet. Keep practising!</div>
+                  ) : microWeaknesses.map((item, i) => (
+                    <div key={i} style={{ padding: "18px 0", borderTop: "1px solid rgba(120,90,50,.1)" }}>
+                      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 12 }}>
+                        <div style={{ fontSize: 16, fontWeight: 700, color: "#3A2E26" }}>{item.mistake}</div>
+                        {item.high
+                          ? <span style={{ fontSize: 11.5, fontWeight: 800, padding: "4px 12px", borderRadius: 20, background: "rgba(217,89,75,0.14)", color: "#C2473A", whiteSpace: "nowrap" }}>High impact</span>
+                          : <span style={{ fontSize: 11.5, fontWeight: 800, padding: "4px 12px", borderRadius: 20, background: "rgba(196,150,40,0.16)", color: "#B07D1E", whiteSpace: "nowrap" }}>Medium impact</span>
+                        }
+                      </div>
+                      <div style={{ display: "flex", alignItems: "center", gap: 16, marginTop: 11, flexWrap: "wrap" }}>
+                        <span style={{ fontSize: 12, fontWeight: 700, color: "#7A6B5C", background: "rgba(120,90,50,.1)", padding: "3px 10px", borderRadius: 20 }}>{item.concept}</span>
+                        <span style={{ fontSize: 13.5, color: "#7A6B5C" }}>Est. marks lost <b style={{ color: "#C2473A" }}>−{item.marks}</b></span>
+                        <span style={{ fontSize: 13.5, color: "#7A6B5C" }}>Error frequency <b style={{ color: "#3A2E26" }}>{item.freqText}</b></span>
+                        <button onClick={() => startPractice(item.subject, item.concept)} style={{ marginLeft: "auto", fontSize: 13, fontWeight: 700, color: "#D5740E", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>Drill this →</button>
+                      </div>
+                    </div>
+                  ))}
+                </section>
+
+                {/* ANALYTICS STRIP */}
+                <section style={{ background: "rgba(255,255,255,0.5)", backdropFilter: "blur(18px) saturate(1.2)", WebkitBackdropFilter: "blur(18px) saturate(1.2)", border: "1px solid rgba(255,255,255,0.65)", borderRadius: 24, padding: "24px 32px", boxShadow: "0 12px 38px -22px rgba(170,110,45,0.3)" }}>
+                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
+                    <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: .7, textTransform: "uppercase", color: "#A2937F" }}>Supporting Analytics</span>
+                    <span style={{ fontSize: 12.5, fontWeight: 600, color: "#B0A192" }}>This week</span>
+                  </div>
+                  <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", rowGap: 18 }}>
+                    <div style={{ flex: "1.4 1 240px", minWidth: 220, display: "flex", alignItems: "center", gap: 18, paddingRight: 28 }}>
+                      <SmallRingChart pct={overallMastery} />
                       <div>
-                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                          Speed Bottlenecks (Time Traps)
-                        </h4>
-                        <p className="text-[10px] text-gray-500">Concepts where you spend excessive time solving.</p>
+                        <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: .5, textTransform: "uppercase", color: "#A2937F" }}>Overall Mastery</div>
+                        <div style={{ fontSize: 36, fontWeight: 800, color: "#2E2620", lineHeight: 1.05 }}>{loadingSignals ? "…" : `${overallMastery}%`}</div>
+                        <div style={{ fontSize: 12.5, color: "#1F8A5B", fontWeight: 700 }}>Based on all sessions</div>
                       </div>
                     </div>
-
-                    {loadingSignals ? (
-                      <p className="text-xs text-gray-500">Loading metrics...</p>
-                    ) : allSignals.filter(s => s.signal === "time_trap").length === 0 ? (
-                      <p className="text-xs text-gray-400 py-3 text-center">No time traps found yet. Perfect speed pacing!</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {allSignals.filter(s => s.signal === "time_trap").slice(0, 3).map((trap) => {
-                          const ratio = trap.evidence?.time_ratio || 1.0;
-                          return (
-                            <div key={trap.id} className="bg-[#090d16] border border-[#1e293b] rounded-2xl p-4 flex items-center justify-between gap-4">
-                              <div className="space-y-1 min-w-0">
-                                <p className="text-xs font-bold text-white truncate">
-                                  {cleanLabel(trap.conceptName)}
-                                </p>
-                                <p className="text-[10px] text-gray-500">
-                                  {trap.evidence?.subject} · Accuracy: {trap.evidence?.mastery_score || 0}%
-                                </p>
-                                <p className="text-[10px] text-orange-400 font-semibold italic">
-                                  {trap.insightMessage}
-                                </p>
-                              </div>
-                              <button
-                                onClick={() => startPractice(trap.evidence?.subject || "Physics", null, trap.conceptName)}
-                                className="shrink-0 bg-[#16223f] border border-[#1e293b] hover:bg-[#1e293b] hover:border-gray-500 text-[10px] font-bold text-white px-3 py-1.5 rounded-lg transition"
-                              >
-                                Pacing Practice
-                              </button>
-                            </div>
-                          );
-                        })}
+                    {[
+                      { label: "Accuracy", value: loadingStats ? "…" : `${accuracyRate}%`, delta: accuracyRate >= 70 ? "On track 🎯" : "Keep practising" },
+                      { label: "Questions Solved", value: loadingStats ? "…" : attemptsCount.toLocaleString(), delta: "All time" },
+                      { label: "Study Streak", value: loadingStats ? "…" : `${streakDays}d`, delta: streakDays > 0 ? "Keep it up 🔥" : "Start today!" },
+                      { label: "Time Spent", value: loadingStats ? "…" : timeSpentStr, delta: "All time" },
+                    ].map(kpi => (
+                      <div key={kpi.label} style={{ flex: "1 1 160px", minWidth: 150, padding: "6px 28px", borderLeft: "1px solid rgba(120,90,50,.14)" }}>
+                        <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: .5, textTransform: "uppercase", color: "#A2937F" }}>{kpi.label}</div>
+                        <div style={{ fontSize: 28, fontWeight: 800, color: "#2E2620", marginTop: 4 }}>{kpi.value}</div>
+                        <div style={{ fontSize: 12.5, color: "#9A8B7C", marginTop: 3 }}>{kpi.delta}</div>
                       </div>
-                    )}
+                    ))}
                   </div>
-
-                  {/* Standard Concept Weaknesses */}
-                  <div className="bg-[#0d1527] border border-[#1e293b] rounded-3xl p-6 space-y-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className="text-xl">⚠️</span>
-                      <div>
-                        <h4 className="text-sm font-bold text-white uppercase tracking-wider">
-                          Weak Concepts
-                        </h4>
-                        <p className="text-[10px] text-gray-500">Topics needing immediate attention (Accuracy &lt; 50%).</p>
-                      </div>
-                    </div>
-
-                    {loadingSignals ? (
-                      <p className="text-xs text-gray-500">Loading metrics...</p>
-                    ) : allSignals.filter(s => s.signal === "weakness" || s.signal === "weak_concept").length === 0 ? (
-                      <p className="text-xs text-gray-400 py-3 text-center">No standard concept weaknesses detected yet. Good work!</p>
-                    ) : (
-                      <div className="space-y-3">
-                        {allSignals.filter(s => s.signal === "weakness" || s.signal === "weak_concept").slice(0, 3).map((sig) => {
-                          const mastery = sig.evidence?.mastery_score ?? 0;
-                          return (
-                            <div key={sig.id} className="bg-[#090d16] border border-[#1e293b] rounded-2xl p-4 flex items-center justify-between gap-4">
-                              <div className="space-y-1 min-w-0">
-                                <p className="text-xs font-bold text-white truncate">
-                                  {cleanLabel(sig.conceptName)}
-                                </p>
-                                <p className="text-[10px] text-gray-500">
-                                  {sig.evidence?.subject} · Solved attempts: {sig.evidence?.attempts || 0}
-                                </p>
-                                <div className="flex items-center gap-2">
-                                  <span className="text-[10px] text-gray-400">Mastery:</span>
-                                  <span className="text-rose-400 text-[10px] font-bold font-mono">{mastery}%</span>
-                                </div>
-                              </div>
-                              <button
-                                onClick={() => startPractice(sig.evidence?.subject || "Physics", null, sig.conceptName)}
-                                className="shrink-0 bg-[#16223f] border border-[#1e293b] hover:bg-[#1e293b] hover:border-gray-500 text-[10px] font-bold text-white px-3 py-1.5 rounded-lg transition"
-                              >
-                                Practice Concept
-                              </button>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-
-                </div>
-
-              </motion.div>
-            ) : (
-              
-              /* ========================================================
-                 MODE 2: PRACTICE FEED MODE
-                 ======================================================== */
-              <motion.div
-                key="practice"
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -15 }}
-                className="flex justify-center"
-              >
-                {loadingQuestions ? (
-                  <div className="py-24 text-center space-y-4">
-                    <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-gray-400 text-sm font-semibold">Generating your custom practice session...</p>
-                  </div>
-                ) : questions.length === 0 ? (
-                  <div className="text-center py-20 space-y-4 bg-[#0d1527] border border-[#1e293b] rounded-3xl p-10 max-w-md">
-                    <span className="text-5xl">🔍</span>
-                    <h3 className="text-xl font-bold text-white">No Questions Found</h3>
-                    <p className="text-xs text-gray-400 leading-relaxed">
-                      We couldn't locate practice questions for the active selection. Please ensure questions are seeded in the database.
-                    </p>
-                    <button
-                      onClick={() => setActivePractice(false)}
-                      className="bg-orange-500 hover:bg-orange-600 text-white px-6 py-2.5 rounded-xl font-bold transition text-xs"
-                    >
-                      Back to Dashboard
-                    </button>
-                  </div>
-                ) : currentQuestionIndex >= questions.length ? (
-                  
-                  /* PRACTICE RESULTS SCREEN */
-                  <>
-                  <PracticeEndEffect
-                    sessionId={practiceSessionId}
-                    practiceAnswers={practiceAnswers}
-                  />
-                  <div className="w-full max-w-2xl bg-[#0d1527] border border-[#1e293b] rounded-3xl p-8 space-y-6 shadow-2xl">
-                    <h3 className="text-2xl font-black text-center text-white">
-                      Practice Finished! 📊
-                    </h3>
-                    
-                    {(() => {
-                      const correct = practiceAnswers.filter((a) => a.correct).length;
-                      const total = practiceAnswers.length;
-                      const score = total > 0 ? Math.round((correct / total) * 100) : 0;
-                      const totalSecs = practiceAnswers.reduce((acc, a) => acc + a.time, 0);
-
-                      return (
-                        <div className="space-y-6">
-                          <div className="grid grid-cols-3 gap-4 text-center">
-                            <div className="bg-[#090d16] border border-[#1e293b] p-4 rounded-2xl">
-                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Accuracy</p>
-                              <p className="text-2xl font-black text-orange-500 mt-1">{score}%</p>
-                            </div>
-                            <div className="bg-[#090d16] border border-[#1e293b] p-4 rounded-2xl">
-                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Correct</p>
-                              <p className="text-2xl font-black text-white mt-1">{correct} / {total}</p>
-                            </div>
-                            <div className="bg-[#090d16] border border-[#1e293b] p-4 rounded-2xl">
-                              <p className="text-[9px] font-bold text-gray-500 uppercase tracking-widest">Time Spent</p>
-                              <p className="text-2xl font-black text-white mt-1">{formatTime(totalSecs)}</p>
-                            </div>
-                          </div>
-
-                          <h4 className="text-xs font-black text-gray-400 uppercase tracking-wider pt-2">
-                            Topic Performance Summary
-                          </h4>
-
-                          <div className="bg-[#090d16] border border-[#1e293b] rounded-2xl overflow-hidden divide-y divide-[#1e293b]">
-                            {practiceAnswers.map((ans, i) => (
-                              <div key={i} className="px-4 py-3 flex items-center justify-between text-xs font-semibold">
-                                <span className="text-gray-300 truncate max-w-[200px]">{cleanLabel(ans.topic)}</span>
-                                <div className="flex items-center gap-4">
-                                  <span className="text-[10px] text-gray-500 font-mono">⏱ {ans.time}s</span>
-                                  <span className={ans.correct ? "text-emerald-400 font-extrabold" : "text-rose-400 font-extrabold"}>
-                                    {ans.correct ? "CORRECT ✓" : "WRONG ✕"}
-                                  </span>
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-
-                          <div className="flex gap-3 pt-4">
-                            <button
-                              onClick={() => startPractice(activeSubject!, activeChapter, activeTopic)}
-                              className="flex-1 bg-[#16223f] border border-[#1e293b] text-white hover:bg-[#1e293b] py-3 rounded-xl transition text-xs font-bold"
-                            >
-                              🔄 Practice Again
-                            </button>
-                            <button
-                              onClick={() => {
-                                setActivePractice(false);
-                                setActiveChapter(null);
-                                setActiveTopic(null);
-                              }}
-                              className="flex-1 bg-orange-500 hover:bg-orange-600 text-white py-3 rounded-xl transition text-xs font-extrabold shadow"
-                            >
-                              Dashboard Overview →
-                            </button>
-                          </div>
-                        </div>
-                      );
-                    })()}
-                  </div>
-                  </>
-                ) : (
-                  
-                  /* ACTIVE QUIZ QUESTION CARD */
-                  <div className="w-full max-w-3xl bg-[#0d1527] border border-[#1e293b] rounded-3xl shadow-2xl overflow-hidden relative">
-                    
-                    {/* Header */}
-                    <div className="px-6 py-4 border-b border-[#1e293b] flex items-center justify-between bg-[#111a2f]">
-                      <div className="flex items-center gap-2 flex-wrap">
-                        <span className="text-[10px] font-black bg-orange-500 text-white px-2.5 py-1 rounded-md">
-                          Question {currentQuestionIndex + 1} of {questions.length}
-                        </span>
-                        <span className="text-[10px] font-bold text-gray-400 bg-[#16223f] border border-[#1e293b] px-2.5 py-1 rounded-md uppercase">
-                          {questions[currentQuestionIndex].exam?.toUpperCase()} {questions[currentQuestionIndex].year}
-                        </span>
-                        {questions[currentQuestionIndex].difficulty && (
-                          <span className="text-[10px] font-bold text-gray-400 bg-[#16223f] border border-[#1e293b] px-2.5 py-1 rounded-md capitalize">
-                            {questions[currentQuestionIndex].difficulty}
-                          </span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400 bg-[#090d16] px-3 py-1.5 border border-[#1e293b] rounded-full">
-                        <span className="animate-pulse text-amber-500">⏱</span>
-                        <span className="font-mono">{formatTime(timeSpent)}</span>
-                      </div>
-                    </div>
-
-                    {/* Body */}
-                    <div className="p-6 md:p-8 space-y-6">
-                      
-                      {/* Math Question Text */}
-                      <div 
-                        className="text-white text-base md:text-lg font-medium leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
-                        dangerouslySetInnerHTML={{ __html: questions[currentQuestionIndex].question }}
-                      />
-
-                      {/* Options or Numerical input */}
-                      {questions[currentQuestionIndex].question_type === "numerical" ? (
-                        <div className="space-y-4">
-                          <p className="text-xs font-bold text-gray-400">Enter your numerical answer:</p>
-                          <input
-                            type="text"
-                            disabled={isAnswerChecked}
-                            placeholder="Type numerical value (e.g. 4, -1, 150)"
-                            className={`w-full max-w-md p-4 rounded-2xl border bg-[#111a2f] text-white outline-none transition-all text-lg font-mono ${
-                              isAnswerChecked
-                                ? isCorrectState
-                                  ? "border-emerald-500 bg-emerald-950/20 text-emerald-100"
-                                  : "border-rose-500 bg-rose-950/20 text-rose-100"
-                                : "border-[#1e293b] focus:border-orange-500"
-                            }`}
-                            value={numericalInput}
-                            onChange={(e) => setNumericalInput(e.target.value)}
-                          />
-                          {isAnswerChecked && (
-                            <div className="text-xs">
-                              <span className="text-gray-500">Correct Answer: </span>
-                              <span className="text-emerald-400 font-bold font-mono">{questions[currentQuestionIndex].answer}</span>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <div className="grid gap-3">
-                          {questions[currentQuestionIndex].options?.map((opt, i) => {
-                            const optionLetters = ["A", "B", "C", "D", "E"];
-                            const isSelected = selectedOption === i;
-                            const isCorrectChoice = questions[currentQuestionIndex].answer === i;
-
-                            let optionStyle = "bg-[#111a2f] border-[#1e293b] text-gray-300 hover:border-gray-500 hover:bg-[#16223f]";
-                            let letterStyle = "bg-[#1e293b] text-gray-400";
-
-                            if (isAnswerChecked) {
-                              if (isCorrectChoice) {
-                                optionStyle = "bg-emerald-950/40 border-emerald-500 text-emerald-100";
-                                letterStyle = "bg-emerald-500 text-white";
-                              } else if (isSelected) {
-                                optionStyle = "bg-rose-950/40 border-rose-500 text-rose-100";
-                                letterStyle = "bg-rose-500 text-white";
-                              } else {
-                                optionStyle = "bg-[#111a2f]/50 border-[#1e293b]/50 text-gray-500 opacity-60";
-                                letterStyle = "bg-[#1e293b]/50 text-gray-600";
-                              }
-                            } else if (isSelected) {
-                              optionStyle = "bg-[#1e293b] border-orange-500 text-white shadow-md shadow-orange-500/5";
-                              letterStyle = "bg-orange-500 text-white";
-                            }
-
-                            return (
-                              <button
-                                key={i}
-                                disabled={isAnswerChecked}
-                                onClick={() => setSelectedOption(i)}
-                                className={`w-full flex items-center gap-4 text-left p-4 rounded-2xl border transition-all text-sm md:text-base font-semibold ${optionStyle}`}
-                              >
-                                <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${letterStyle}`}>
-                                  {optionLetters[i]}
-                                </span>
-                                <span className="flex-1 overflow-x-auto whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: opt }} />
-                              </button>
-                            );
-                          })}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* Footer Actions */}
-                    <div className="px-6 py-4 border-t border-[#1e293b] flex items-center justify-between bg-[#111a2f]">
-                      <div>
-                        {isAnswerChecked && questions[currentQuestionIndex].explanation && (
-                          <button
-                            onClick={() => setShowExplanation(prev => !prev)}
-                            className="bg-[#1e293b] hover:bg-[#2e3b4e] border border-[#334155] text-white text-xs px-4 py-2 rounded-xl transition font-bold"
-                          >
-                            {showExplanation ? "Hide Explanation ▲" : "View Explanation Detailed ▼"}
-                          </button>
-                        )}
-                      </div>
-
-                      <div>
-                        {!isAnswerChecked ? (
-                          <button
-                            disabled={questions[currentQuestionIndex].question_type === "numerical" ? !numericalInput.trim() : selectedOption === null}
-                            onClick={handleCheckAnswer}
-                            className="bg-orange-500 text-white hover:bg-orange-600 disabled:bg-[#16223f] disabled:text-gray-600 disabled:cursor-not-allowed text-xs px-6 py-2.5 rounded-xl transition font-black shadow"
-                          >
-                            Submit Answer
-                          </button>
-                        ) : (
-                          <button
-                            onClick={handleNextQuestion}
-                            className="bg-orange-500 text-white hover:bg-orange-600 text-xs px-6 py-2.5 rounded-xl transition font-black shadow"
-                          >
-                            {currentQuestionIndex + 1 < questions.length ? "Next Question →" : "Finish Practice →"}
-                          </button>
-                        )}
-                      </div>
-                    </div>
-
-                    {/* Solution Explanation Panel */}
-                    <AnimatePresence>
-                      {showExplanation && questions[currentQuestionIndex].explanation && (
-                        <motion.div
-                          initial={{ height: 0, opacity: 0 }}
-                          animate={{ height: "auto", opacity: 1 }}
-                          exit={{ height: 0, opacity: 0 }}
-                          className="bg-[#0d1527] border-t border-[#1e293b] p-6 md:p-8 space-y-4 overflow-hidden"
-                        >
-                          <h4 className="text-xs font-black text-emerald-400 flex items-center gap-1.5 uppercase tracking-wider">
-                            <span>📝</span> Detailed Explanation
-                          </h4>
-                          <div 
-                            className="text-gray-300 text-sm md:text-base leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
-                            dangerouslySetInnerHTML={{ __html: questions[currentQuestionIndex].explanation }}
-                          />
-                        </motion.div>
-                      )}
-                    </AnimatePresence>
-
-                  </div>
-                )}
-              </motion.div>
+                </section>
+              </>
             )}
-          </AnimatePresence>
-
-        </div>
+          </div>
+        </main>
       </div>
-    </div>
+    </>
   );
 }
 
 export default function DashboardPage() {
   return (
     <Suspense fallback={
-      <div className="min-h-screen flex items-center justify-center bg-[#090d16] text-[#e2e8f0]">
-        <div className="w-12 h-12 border-4 border-orange-500 border-t-transparent rounded-full animate-spin" />
+      <div style={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", background: "linear-gradient(165deg,#FCEFDC,#FBF5EB,#F7E6D2)" }}>
+        <div style={{ width: 48, height: 48, borderRadius: "50%", border: "4px solid #F4AB2D", borderTopColor: "transparent", animation: "spin 0.8s linear infinite" }} />
+        <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
       </div>
     }>
       <DashboardContent />

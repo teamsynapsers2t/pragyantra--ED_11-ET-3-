@@ -2,15 +2,29 @@
 
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+
+const JEE_SUBJECTS = [
+  { name: "Physics", icon: "⚡" },
+  { name: "Chemistry", icon: "🧪" },
+  { name: "Mathematics", icon: "📐" },
+];
+const NEET_SUBJECTS = [
+  { name: "Physics", icon: "⚡" },
+  { name: "Chemistry", icon: "🧪" },
+  { name: "Biology", icon: "🧬" },
+];
 
 export default function SubjectsPage() {
   const router = useRouter();
 
-  const subjects = [
-    { name: "Physics", icon: "⚡" },
-    { name: "Chemistry", icon: "🧪" },
-    { name: "Mathematics", icon: "📐" },
-  ];
+  // Adapt the subject list to the chosen domain (NEET → Biology, JEE → Maths).
+  // Default to JEE until the client reads the saved domain to avoid a flash.
+  const [subjects, setSubjects] = useState(JEE_SUBJECTS);
+  useEffect(() => {
+    const domain = (localStorage.getItem("domain") || "").toUpperCase();
+    setSubjects(domain === "NEET" ? NEET_SUBJECTS : JEE_SUBJECTS);
+  }, []);
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[#fff7ed] via-[#fff1e6] to-[#ffe4cc] relative overflow-hidden p-10">

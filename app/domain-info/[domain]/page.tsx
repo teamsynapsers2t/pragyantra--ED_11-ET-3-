@@ -10,7 +10,7 @@ const domainData = {
     title: "Joint Entrance Examination (JEE)",
     shortName: "JEE",
     description: "The gateway to India's premier engineering institutes like IITs, NITs, and IIITs.",
-    subjects: ["Physics"],
+    subjects: ["Physics", "Chemistry", "Mathematics"],
     highlights: [
       "Tests analytical and problem-solving skills",
       "Two stages: JEE Main and JEE Advanced",
@@ -18,7 +18,7 @@ const domainData = {
     ],
     examDetails: [
       { label: "Duration", value: "3 Hours", icon: "⏳" },
-      { label: "Total Questions", value: "90 (Attempt 75)", icon: "📝" },
+      { label: "Total Questions", value: "75", icon: "📝" },
       { label: "Total Marks", value: "300", icon: "💯" },
       { label: "Marking Scheme", value: "+4 for correct", icon: "✅" },
       { label: "Negative Marking", value: "-1 for incorrect", icon: "❌" }
@@ -29,15 +29,15 @@ const domainData = {
     title: "National Eligibility cum Entrance Test (NEET)",
     shortName: "NEET",
     description: "The single national level medical entrance exam for admission to MBBS and BDS courses in India.",
-    subjects: ["Physics"],
+    subjects: ["Physics", "Chemistry", "Biology"],
     highlights: [
       "Tests conceptual clarity and memory",
       "Single stage objective exam",
       "Gateway to top medical colleges like AIIMS"
     ],
     examDetails: [
-      { label: "Duration", value: "3 Hours 20 mins", icon: "⏳" },
-      { label: "Total Questions", value: "200 (Attempt 180)", icon: "📝" },
+      { label: "Duration", value: "3 Hours", icon: "⏳" },
+      { label: "Total Questions", value: "180", icon: "📝" },
       { label: "Total Marks", value: "720", icon: "💯" },
       { label: "Marking Scheme", value: "+4 for correct", icon: "✅" },
       { label: "Negative Marking", value: "-1 for incorrect", icon: "❌" }
