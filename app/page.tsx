@@ -301,17 +301,21 @@ export default function Home() {
 
         {/* NAV */}
         <nav id="nav" style={{position:"fixed",top:0,left:0,right:0,zIndex:50,color:"#1f2430",transition:"background .4s ease,color .4s ease,border-color .4s ease",borderBottom:"1px solid transparent"}}>
-          <div style={{maxWidth:1240,margin:"0 auto",padding:"20px 32px",display:"flex",alignItems:"center",justifyContent:"space-between",gap:24}}>
-            <a href="#top" style={{textDecoration:"none",color:"inherit",display:"flex",alignItems:"baseline",gap:10}}>
-              <span style={{fontFamily:"'Instrument Serif',serif",fontSize:27,letterSpacing:1,lineHeight:1}}>PAPER</span>
-              <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:9.5,letterSpacing:2.5,textTransform:"uppercase",opacity:.5,paddingBottom:2}}>microweakness&nbsp;engine</span>
+          <div style={{padding:"0 28px",height:60,display:"flex",alignItems:"center",position:"relative"}}>
+            {/* Logo — left corner, matches question_dashboard style */}
+            <a href="#top" style={{textDecoration:"none",color:"inherit",display:"flex",alignItems:"center",gap:0,flexShrink:0,zIndex:2}}>
+              <span style={{fontFamily:"'Hanken Grotesk',system-ui,sans-serif",fontSize:22,fontWeight:800,letterSpacing:-0.5,lineHeight:1}}>
+                PA<span style={{color:"#f07315"}}>P</span>ER
+              </span>
             </a>
-            <div className="nav-links" style={{display:"none",alignItems:"center",gap:34,fontFamily:"'Hanken Grotesk',sans-serif",fontSize:14}}>
-              <a href="#how" className="nav-link" style={{textDecoration:"none",color:"inherit"}}>How it works</a>
+            {/* Nav links — absolutely centred so they align with hero content */}
+            <div className="nav-links" style={{display:"none",alignItems:"center",gap:34,fontFamily:"'Hanken Grotesk',sans-serif",fontSize:14,position:"absolute",left:"50%",transform:"translateX(-50%)"}}>
+              <a href="#how"    className="nav-link" style={{textDecoration:"none",color:"inherit"}}>How it works</a>
               <a href="#engine" className="nav-link" style={{textDecoration:"none",color:"inherit"}}>The engine</a>
-              <a href="#exams" className="nav-link" style={{textDecoration:"none",color:"inherit"}}>JEE / NEET</a>
+              <a href="#exams"  className="nav-link" style={{textDecoration:"none",color:"inherit"}}>JEE / NEET</a>
             </div>
-            <div style={{display:"flex",alignItems:"center",gap:16}}>
+            {/* CTA — right side */}
+            <div style={{display:"flex",alignItems:"center",gap:16,marginLeft:"auto",flexShrink:0,zIndex:2}}>
               <a suppressHydrationWarning href={buttonUrl} className="btn-nav" style={{textDecoration:"none",color:"#fff",fontSize:13.5,fontWeight:600,padding:"11px 22px",borderRadius:999,background:"linear-gradient(180deg,#f9821f,#ef6a0c)",boxShadow:"0 8px 20px -8px rgba(240,115,15,.6)",whiteSpace:"nowrap"}}>
                 <span suppressHydrationWarning>{navLabel}</span>
               </a>
