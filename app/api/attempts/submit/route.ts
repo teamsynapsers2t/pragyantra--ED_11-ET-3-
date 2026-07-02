@@ -2,6 +2,8 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { clerkIdToUuid } from '@/utils/helpers'
 import { createServiceClient } from '@/utils/supabase/service'
+import { rateLimit, tooManyRequests } from '@/utils/rateLimit'
+import { reportError } from '@/utils/reportError'
 
 /**
  * Numerical answer tolerance for JEE questions.
@@ -25,6 +27,11 @@ export async function POST(req: Request) {
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    // High-volume endpoint (one call per answered question). 120 / min is far
+    // above any human pace but stops scripted floods that would bloat attempts.
+    const rl = rateLimit('attempts-submit', userId, 120, 60 * 1000)
+    if (!rl.ok) return tooManyRequests(rl)
 
     const body = await req.json()
     const {
@@ -149,7 +156,7 @@ export async function POST(req: Request) {
     })
 
   } catch (err: any) {
-    console.error("[API Attempts] Handler error:", err)
+    await reportError(err, { route: 'api/attempts/submit' })
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

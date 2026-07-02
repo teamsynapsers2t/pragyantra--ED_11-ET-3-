@@ -1,0 +1,74 @@
+/* Shared styling for /privacy and /terms legal pages. */
+.page {
+  min-height: 100vh;
+  background: linear-gradient(165deg, #FCEFDC 0%, #FBF5EB 46%, #F7E6D2 100%);
+  font-family: system-ui, -apple-system, sans-serif;
+  color: #2E2620;
+  padding: 48px 24px 96px;
+}
+.shell {
+  max-width: 760px;
+  margin: 0 auto;
+}
+.back {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #C7600F;
+  text-decoration: none;
+  margin-bottom: 28px;
+}
+.back:hover { text-decoration: underline; }
+.card {
+  background: rgba(255, 255, 255, 0.72);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 24px;
+  padding: 48px 44px;
+  box-shadow: 0 20px 60px -24px rgba(170, 110, 45, 0.25);
+}
+.kicker {
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: #B97A12;
+  margin: 0 0 10px;
+}
+.title {
+  font-size: 34px;
+  font-weight: 900;
+  margin: 0 0 8px;
+  line-height: 1.15;
+}
+.updated {
+  font-size: 13px;
+  color: #8C7D6E;
+  margin: 0 0 32px;
+}
+.card h2 {
+  font-size: 19px;
+  font-weight: 800;
+  margin: 32px 0 10px;
+  color: #2E2620;
+}
+.card p, .card li {
+  font-size: 15px;
+  line-height: 1.7;
+  color: #4A4036;
+}
+.card ul { padding-left: 20px; margin: 8px 0; }
+.card li { margin-bottom: 6px; }
+.card a { color: #C7600F; font-weight: 600; }
+.notice {
+  margin-top: 36px;
+  padding: 16px 18px;
+  border-radius: 14px;
+  background: rgba(244, 171, 45, 0.12);
+  border: 1px solid rgba(224, 112, 30, 0.22);
+  font-size: 13px;
+  color: #8a5a18;
+  line-height: 1.6;
+}

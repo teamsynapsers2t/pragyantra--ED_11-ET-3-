@@ -10,6 +10,8 @@ import {
   type MasteryMap,
   type RequiresMap,
 } from '@/utils/rootCause'
+import { rateLimit, tooManyRequests } from '@/utils/rateLimit'
+import { reportError } from '@/utils/reportError'
 
 // POST /api/weakness/refresh
 //
@@ -49,6 +51,11 @@ export async function POST() {
   try {
     const { userId } = await auth()
     if (!userId) return new NextResponse('Unauthorized', { status: 401 })
+
+    // Rebuilds every signal (full table delete+insert) — guard against hammering.
+    // 30 / min comfortably covers page loads + the 10s auto-refresh interval.
+    const rl = rateLimit('weakness-refresh', userId, 30, 60 * 1000)
+    if (!rl.ok) return tooManyRequests(rl)
 
     const supabase = createServiceClient()
     const userUuid = clerkIdToUuid(userId)
@@ -269,7 +276,7 @@ export async function POST() {
 
     return NextResponse.json({ ok: true, generated: toUpsert.length, counts })
   } catch (err: any) {
-    console.error('[weakness/refresh] error:', err)
+    await reportError(err, { route: 'api/weakness/refresh' })
     return NextResponse.json({ error: err.message }, { status: 500 })
   }
 }

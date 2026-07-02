@@ -1,8 +1,51 @@
 import "./globals.css";
+import type { Metadata } from "next";
 import { ThemeProvider } from "next-themes";
 import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import Script from "next/script";
+import PostHogProvider from "./providers/PostHogProvider";
+
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+export const metadata: Metadata = {
+  metadataBase: new URL(APP_URL),
+  title: {
+    default: "PAPER — Find the root cause of every JEE & NEET mistake",
+    template: "%s · PAPER",
+  },
+  description:
+    "PAPER traces every wrong answer down to the one weak foundation underneath it, so you fix the root instead of the symptom. Personalised JEE & NEET prep powered by a root-cause engine.",
+  keywords: [
+    "JEE preparation",
+    "NEET preparation",
+    "JEE practice questions",
+    "NEET practice questions",
+    "weakness analysis",
+    "root cause learning",
+    "personalised study plan",
+  ],
+  applicationName: "PAPER",
+  authors: [{ name: "PAPER" }],
+  openGraph: {
+    type: "website",
+    siteName: "PAPER",
+    title: "PAPER — Find the root cause of every JEE & NEET mistake",
+    description:
+      "Fix the root, not the symptom. PAPER's engine traces each mistake to the weak foundation beneath it and builds your study plan around it.",
+    url: APP_URL,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PAPER — Find the root cause of every JEE & NEET mistake",
+    description:
+      "Fix the root, not the symptom. Personalised JEE & NEET prep powered by a root-cause engine.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+  },
+};
 
 export default function RootLayout({
   children,
@@ -18,6 +61,7 @@ export default function RootLayout({
     }}>
       <html lang="en" suppressHydrationWarning>
         <body>
+          <PostHogProvider />
           <ThemeProvider attribute="class" defaultTheme="light">
             {children}
           </ThemeProvider>

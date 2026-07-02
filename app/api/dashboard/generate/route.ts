@@ -5,6 +5,7 @@ import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { clerkIdToUuid } from '@/utils/helpers'
+import { rateLimit, tooManyRequests } from '@/utils/rateLimit'
 
 // Important to handle longer AI generational response times
 export const maxDuration = 60;
@@ -17,6 +18,10 @@ export async function POST(req: Request) {
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    // Rate limit: AI generation is expensive (Gemini tokens). 10 / 10 min per user.
+    const rl = rateLimit('dashboard-generate', userId, 10, 10 * 60 * 1000)
+    if (!rl.ok) return tooManyRequests(rl)
 
     const supabase = await createClient()
 
