@@ -184,8 +184,8 @@ export default function RootCausesPage() {
                     Dashboard
                   </button>
                 </div>
-                <h1 style={{ margin: 0, fontSize: "clamp(22px,2.8vw,30px)", fontWeight: 800, color: "#2E2620", letterSpacing: -0.3 }}>All Root Causes</h1>
-                <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>Every weakness signal from your practice — live and up to date.</p>
+                <h1 style={{ margin: 0, fontSize: "clamp(22px,2.8vw,30px)", fontWeight: 800, color: "#2E2620", letterSpacing: -0.3 }}>Why you&apos;re losing marks</h1>
+                <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>PAPER traced every mistake in your practice back to its source. Updated live.</p>
               </div>
 
               <div style={{ display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
@@ -210,9 +210,9 @@ export default function RootCausesPage() {
             {/* STATS ROW */}
             <div style={{ display: "grid", gridTemplateColumns: "repeat(3,1fr)", gap: 14, marginBottom: 24 }}>
               {[
-                { label: "Root Cause Chains", value: rootFlaws.length, icon: "🎯" },
-                { label: "Weak Concepts", value: weakConcepts.length, icon: "⚡" },
-                { label: "Total Signals", value: signals.length, icon: "📊" },
+                { label: "Root causes found", value: rootFlaws.length, icon: "🎯" },
+                { label: "Concepts holding you back", value: weakConcepts.length, icon: "⚡" },
+                { label: "Signals tracked", value: signals.length, icon: "📊" },
               ].map(stat => (
                 <div key={stat.label} style={{ background: glass, backdropFilter: "blur(16px)", WebkitBackdropFilter: "blur(16px)", border: glassBorder, borderRadius: 18, padding: "18px 20px", boxShadow: cardShadow }}>
                   <div style={{ fontSize: 22 }}>{stat.icon}</div>
@@ -280,11 +280,6 @@ export default function RootCausesPage() {
                           <span style={{ fontSize: 10.5, fontWeight: 700, color: sc.text, background: sc.bg, border: `1px solid ${sc.border}`, padding: "3px 10px", borderRadius: 20 }}>
                             Score {sig.severityScore}
                           </span>
-                          {sig.confidenceScore != null && (
-                            <span style={{ fontSize: 10.5, fontWeight: 600, color: "#9A8B7C", background: "rgba(120,90,50,.08)", padding: "3px 10px", borderRadius: 20 }}>
-                              {sig.confidenceScore}% confidence
-                            </span>
-                          )}
                         </div>
                         <div style={{ display: "flex", gap: 8 }}>
                           <button className="practice-btn" onClick={() => router.push(`/question_dashboard?v=questionlist&exam=jee&subject=Physics&concept=${encodeURIComponent(rootName)}`)}>
@@ -314,7 +309,7 @@ export default function RootCausesPage() {
                             <>
                               {hops > 1 && (
                                 <div style={{ fontSize: 11, fontWeight: 700, color: "#B97A12", marginBottom: 10, letterSpacing: 0.3 }}>
-                                  ⛓ {hops}-level deep chain
+                                  ⛓ PAPER traced this {hops} levels deep — most students only see the symptom
                                 </div>
                               )}
                               <div style={{ display: "flex", alignItems: "center", gap: 0, flexWrap: "wrap" }}>
@@ -331,7 +326,7 @@ export default function RootCausesPage() {
                                         borderRadius: 14, padding: "14px 16px",
                                       }}>
                                         <div style={{ fontSize: 10.5, fontWeight: 800, letterSpacing: 0.5, color: isLast ? "#B97A12" : "#B58A52", marginBottom: 6, textTransform: "uppercase" }}>
-                                          {isLast ? "Root Cause" : i === 0 ? "Symptom" : "Contributing"}
+                                          {isLast ? "Fix this first" : i === 0 ? "Where you lose marks" : "Weak link"}
                                         </div>
                                         <div style={{ fontSize: 15, fontWeight: 800, color: isLast ? "#5A3D0A" : "#3A2E26", marginBottom: 10 }}>{nm}</div>
                                         <div style={{ display: "flex", alignItems: "center", gap: 10 }}>

@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useUser, UserButton } from "@clerk/nextjs";
 import { ambiguousToPercent } from "@/utils/scale";
+import MathHtml from "@/app/components/MathHtml";
 
 // ─── types ────────────────────────────────────────────────────────────────────
 interface Question {
@@ -251,6 +252,29 @@ function ComingSoon({ title, emoji, desc }: { title: string; emoji: string; desc
   );
 }
 
+// ─── NEET: not live yet ────────────────────────────────────────────────────────
+// The question bank, practice engine, and analysis dashboard only have JEE
+// content today. Any NEET selection — from the exam picker, settings toggle,
+// or a direct link — lands here instead of a broken/empty JEE-shaped screen.
+function NeetComingSoon({ onBackToJee }: { onBackToJee: () => void }) {
+  return (
+    <div style={{ minHeight: "100vh", background: T.bg, fontFamily: T.font, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 }}>
+      <div style={{ maxWidth: 460, width: "100%", textAlign: "center", background: T.surface, border: `1px solid ${T.line}`, borderRadius: 24, padding: "48px 36px", boxShadow: T.shadowCard }}>
+        <div style={{ fontSize: 60, lineHeight: 1, marginBottom: 18 }}>🧬</div>
+        <div style={{ background: "linear-gradient(135deg,#5FBF7E,#16834A)", WebkitBackgroundClip: "text", WebkitTextFillColor: "transparent", backgroundClip: "text", fontSize: 34, fontWeight: 800, letterSpacing: -1 }}>NEET</div>
+        <div style={{ display: "inline-block", marginTop: 12, background: "#E6F4EA", border: "1.5px solid #BEE3C8", borderRadius: 999, padding: "7px 20px", fontSize: 13, fontWeight: 700, color: T.green700, letterSpacing: 0.3 }}>Coming Soon</div>
+        <p style={{ color: T.muted, fontSize: 15, lineHeight: 1.65, margin: "18px 0 0" }}>
+          We&apos;re building PAPER&apos;s root-cause engine and question bank for NEET UG. It isn&apos;t ready yet — but JEE is fully live right now.
+        </p>
+        <button onClick={onBackToJee} style={{ marginTop: 28, display: "inline-flex", alignItems: "center", gap: 8, background: T.brandGrad, border: "none", borderRadius: 14, padding: "13px 26px", fontSize: 14.5, fontWeight: 700, color: "#fff", cursor: "pointer", boxShadow: T.shadowBrand }}>
+          Continue with JEE
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2.3" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
+        </button>
+      </div>
+    </div>
+  );
+}
+
 // ─── Bookmarks page ───────────────────────────────────────────────────────────
 function BookmarksPage({ bookmarks, onPracticeBookmark, onRemove }: {
   bookmarks: Record<string, Question>;
@@ -284,7 +308,7 @@ function BookmarksPage({ bookmarks, onPracticeBookmark, onRemove }: {
               {q.year && <span style={{ fontSize: 11, color: T.muted, background: "#F3F4F6", padding: "3px 10px", borderRadius: 6 }}>{q.exam?.toUpperCase()} {q.year}</span>}
               {q.difficulty && <DiffBars diff={q.difficulty} />}
             </div>
-            <div style={{ fontSize: 14, color: T.ink, lineHeight: 1.65, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }} dangerouslySetInnerHTML={{ __html: q.question }} />
+            <MathHtml stripOptions style={{ fontSize: 14, color: T.ink, lineHeight: 1.65, marginBottom: 14, display: "-webkit-box", WebkitLineClamp: 3, WebkitBoxOrient: "vertical", overflow: "hidden" }} html={q.question} />
             <div style={{ display: "flex", gap: 10 }}>
               <button onClick={() => onPracticeBookmark(q)} style={{ flex: 1, background: T.brandGrad, color: "#fff", border: "none", borderRadius: 12, padding: "9px 0", fontSize: 13, fontWeight: 700, cursor: "pointer" }}>
                 Practice this question →
@@ -399,19 +423,191 @@ function PracticeEndEffect({ sessionId, answers }: { sessionId: string | null; a
   return null;
 }
 
+// ─── Filters: reusable button + slide-in panel ───────────────────────────────
+// Shared by the chapter-selection screen and the questions-list screen so the
+// same filter UI (sort / year / level / difficulty) is available in both.
+function FilterPanel({
+  filterSort, onFilterSortChange,
+  filterYears, onFilterYearsChange,
+  filterDifficulty, onFilterDifficultyChange,
+  filterLevel, onFilterLevelChange,
+  buttonStyle,
+}: {
+  filterSort: "newest"|"oldest";
+  onFilterSortChange: (v: "newest"|"oldest") => void;
+  filterYears: number[];
+  onFilterYearsChange: (v: number[]) => void;
+  filterDifficulty: string[];
+  onFilterDifficultyChange: (v: string[]) => void;
+  filterLevel: string;
+  onFilterLevelChange: (v: string) => void;
+  buttonStyle?: React.CSSProperties;
+}) {
+  const [filterOpen, setFilterOpen] = useState(false);
+  const [pendingSort, setPendingSort] = useState<"newest"|"oldest">(filterSort);
+  const [pendingYears, setPendingYears] = useState<number[]>(filterYears);
+  const [pendingDifficulty, setPendingDifficulty] = useState<string[]>(filterDifficulty);
+  const [pendingLevel, setPendingLevel] = useState<string>(filterLevel);
+
+  const activeCount = filterYears.length + filterDifficulty.length + (filterLevel ? 1 : 0);
+  const hasActive = filterYears.length > 0 || filterDifficulty.length > 0 || !!filterLevel;
+
+  return (
+    <>
+      <button
+        onClick={() => { setPendingSort(filterSort); setPendingYears(filterYears); setPendingDifficulty(filterDifficulty); setPendingLevel(filterLevel); setFilterOpen(true); }}
+        style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 14, cursor: "pointer", fontWeight: 700, fontSize: 14, background: hasActive ? T.brandGrad : T.surface, border: `1px solid ${hasActive ? "transparent" : T.line}`, color: hasActive ? "#fff" : T.ink, transition: "all .25s", position: "relative", flexShrink: 0, ...buttonStyle }}>
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
+        Filters
+        {activeCount > 0 && (
+          <span style={{ position: "absolute", top: -7, right: -7, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 999, background: "#fff", color: T.brand500, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${T.brand500}` }}>
+            {activeCount}
+          </span>
+        )}
+      </button>
+
+      {filterOpen && (
+        <>
+          <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.45)", backdropFilter: "blur(2px)", zIndex: 70 }} />
+          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 380, maxWidth: "100vw", background: "#fff", zIndex: 80, boxShadow: "-8px 0 40px rgba(40,20,0,0.18)", display: "flex", flexDirection: "column", fontFamily: T.font }}>
+            {/* Header */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px 16px", borderBottom: `1px solid ${T.line}` }}>
+              <span style={{ fontSize: 20, fontWeight: 800, color: T.ink }}>Filters</span>
+              <button onClick={() => setFilterOpen(false)} style={{ width: 36, height: 36, borderRadius: 12, border: `1px solid ${T.line}`, background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.muted }}>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+              </button>
+            </div>
+
+            {/* Scrollable body */}
+            <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
+              {/* Sort By */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Sort By</div>
+                <div style={{ display: "flex", gap: 10 }}>
+                  {(["newest", "oldest"] as const).map(s => (
+                    <button key={s} onClick={() => setPendingSort(s)}
+                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 14px", borderRadius: 14, border: `1.5px solid ${pendingSort === s ? T.brand500 : T.line}`, background: pendingSort === s ? T.brandGrad : "#fff", color: pendingSort === s ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">{s === "newest" ? <path d="M12 5v14M5 12l7 7 7-7"/> : <path d="M12 19V5M5 12l7-7 7 7"/>}</svg>
+                      {s === "newest" ? "Newest to Oldest" : "Oldest to Newest"}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Year Filter */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Year Filter</div>
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+                  {[2026,2025,2024,2023,2022,2021,2020,2019,2018,2017,2016,2015].map(y => {
+                    const on = pendingYears.includes(y);
+                    return (
+                      <button key={y} onClick={() => setPendingYears(on ? pendingYears.filter(x => x !== y) : [...pendingYears, y])}
+                        style={{ padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${on ? T.brand500 : T.line}`, background: on ? T.brandGrad : "#fff", color: on ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
+                        {y}
+                      </button>
+                    );
+                  })}
+                </div>
+                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
+                  {[["Last 5 Years", 5], ["Last 10 Years", 10], ["All Years", 0]].map(([label, n]) => (
+                    <button key={label as string} onClick={() => {
+                      if (n === 0) { setPendingYears([]); }
+                      else { const cur = new Date().getFullYear(); setPendingYears(Array.from({length: n as number}, (_, i) => cur - i)); }
+                    }}
+                      style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
+                      {label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Student Level */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Student Level</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
+                  {[
+                    { label: "Beginner", icon: "🌱", diff: "Easy" },
+                    { label: "Intermediate", icon: "🔥", diff: "Medium" },
+                    { label: "Advanced", icon: "👑", diff: "Hard" },
+                  ].map(lv => {
+                    const on = pendingLevel === lv.label;
+                    return (
+                      <button key={lv.label} onClick={() => { setPendingLevel(on ? "" : lv.label); if (!on) setPendingDifficulty([lv.diff]); else setPendingDifficulty([]); }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 10px", borderRadius: 16, border: `2px solid ${on ? T.brand500 : T.line}`, background: on ? "#FFF5EC" : "#fff", cursor: "pointer" }}>
+                        <span style={{ fontSize: 26 }}>{lv.icon}</span>
+                        <span style={{ fontWeight: 700, fontSize: 13, color: on ? T.brand500 : T.ink }}>{lv.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Difficulty Level */}
+              <div style={{ marginBottom: 28 }}>
+                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Difficulty Level</div>
+                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
+                  {[
+                    { label: "Easy", color: "#22c55e", bars: [1,1,0,0] },
+                    { label: "Medium", color: "#f59e0b", bars: [1,1,1,0] },
+                    { label: "Hard", color: "#ef4444", bars: [1,1,1,1] },
+                    { label: "Expert", color: "#7c3aed", bars: [1,1,1,1] },
+                  ].map(d => {
+                    const on = pendingDifficulty.includes(d.label);
+                    return (
+                      <button key={d.label} onClick={() => { setPendingDifficulty(on ? pendingDifficulty.filter(x => x !== d.label) : [...pendingDifficulty, d.label]); setPendingLevel(""); }}
+                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 8px", borderRadius: 14, border: `2px solid ${on ? d.color : T.line}`, background: on ? `${d.color}15` : "#fff", cursor: "pointer" }}>
+                        <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
+                          {d.bars.map((h, i) => <div key={i} style={{ width: 4, height: 6 + i * 4, borderRadius: 2, background: on ? d.color : (i < (d.label === "Easy" ? 2 : d.label === "Medium" ? 3 : 4) ? d.color : T.line) }} />)}
+                        </div>
+                        <span style={{ fontWeight: 700, fontSize: 12, color: on ? d.color : T.ink }}>{d.label}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div style={{ borderTop: `1px solid ${T.line}`, padding: "16px 24px" }}>
+              <div style={{ fontSize: 14, fontWeight: 700, color: T.brand500, textAlign: "center", marginBottom: 12 }}>
+                <span style={{ fontWeight: 800 }}>Filters ready to apply</span>
+              </div>
+              <div style={{ display: "flex", gap: 10 }}>
+                <button onClick={() => { setPendingSort("newest"); setPendingYears([]); setPendingDifficulty([]); setPendingLevel(""); onFilterSortChange("newest"); onFilterYearsChange([]); onFilterDifficultyChange([]); onFilterLevelChange(""); }}
+                  style={{ flex: 1, padding: "13px", borderRadius: 14, border: `1.5px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
+                  Reset
+                </button>
+                <button onClick={() => { onFilterSortChange(pendingSort); onFilterYearsChange(pendingYears); onFilterDifficultyChange(pendingDifficulty); onFilterLevelChange(pendingLevel); setFilterOpen(false); }}
+                  style={{ flex: 2, padding: "13px", borderRadius: 14, border: "none", background: T.brandGrad, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 8px 20px rgba(255,107,0,.35)" }}>
+                  Apply Filters
+                </button>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+    </>
+  );
+}
+
 // ─── Question List view ───────────────────────────────────────────────────────
 function QuestionListView({
   subject, chapter, topic, exam,
   onSelectQuestion, onBack,
-  filterSort, filterYears, filterDifficulty,
+  filterSort, filterYears, filterDifficulty, filterLevel,
+  onFilterSortChange, onFilterYearsChange, onFilterDifficultyChange, onFilterLevelChange,
 }: {
   subject: string; chapter: string | null; topic: string | null; exam: string;
   onSelectQuestion: (startAt: number) => void;
   onBack: () => void;
-  filterSort?: "newest"|"oldest";
-  filterYears?: number[];
-  filterDifficulty?: string[];
-  filterLevel?: string;
+  filterSort: "newest"|"oldest";
+  filterYears: number[];
+  filterDifficulty: string[];
+  filterLevel: string;
+  onFilterSortChange: (v: "newest"|"oldest") => void;
+  onFilterYearsChange: (v: number[]) => void;
+  onFilterDifficultyChange: (v: string[]) => void;
+  onFilterLevelChange: (v: string) => void;
 }) {
   const [questions, setQuestions] = useState<Question[]>([]);
   const [loading, setLoading]     = useState(true);
@@ -580,11 +776,19 @@ function QuestionListView({
                 {filtered.length} question{filtered.length !== 1 ? "s" : ""}{filterYears && filterYears.length > 0 || filterDifficulty && filterDifficulty.length > 0 ? " (filtered)" : " · click any to start practice"}
               </p>
             )}
-            <input
-              value={search} onChange={e => setSearch(e.target.value)}
-              placeholder="Search questions or filter by year…"
-              style={{ width: "100%", boxSizing: "border-box", padding: "11px 16px", borderRadius: 14, border: "1.5px solid #f0f0f0", background: "rgba(255,255,255,0.9)", color: "#111", fontSize: 14, outline: "none", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
-            />
+            <div style={{ display: "flex", gap: 10, alignItems: "stretch" }}>
+              <input
+                value={search} onChange={e => setSearch(e.target.value)}
+                placeholder="Search questions or filter by year…"
+                style={{ flex: 1, minWidth: 0, boxSizing: "border-box", padding: "11px 16px", borderRadius: 14, border: "1.5px solid #f0f0f0", background: "rgba(255,255,255,0.9)", color: "#111", fontSize: 14, outline: "none", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}
+              />
+              <FilterPanel
+                filterSort={filterSort} onFilterSortChange={onFilterSortChange}
+                filterYears={filterYears} onFilterYearsChange={onFilterYearsChange}
+                filterDifficulty={filterDifficulty} onFilterDifficultyChange={onFilterDifficultyChange}
+                filterLevel={filterLevel} onFilterLevelChange={onFilterLevelChange}
+              />
+            </div>
           </div>
 
           {loading ? (
@@ -618,9 +822,10 @@ function QuestionListView({
                         {q.difficulty && <span style={{ fontSize: 10, fontWeight: 700, color: diffColor(q.difficulty), background: `${diffColor(q.difficulty)}12`, border: `1px solid ${diffColor(q.difficulty)}33`, padding: "2px 8px", borderRadius: 5 }}>{q.difficulty}</span>}
                         {q.topic && <span style={{ fontSize: 10, color: "#999", background: "#f5f5f5", border: "1px solid #eee", padding: "2px 8px", borderRadius: 5 }}>{clean(q.topic)}</span>}
                       </div>
-                      <div
+                      <MathHtml
+                        stripOptions
                         style={{ fontSize: 13.5, color: "#333", lineHeight: 1.6, display: "-webkit-box", WebkitLineClamp: 2, WebkitBoxOrient: "vertical", overflow: "hidden" }}
-                        dangerouslySetInnerHTML={{ __html: q.question }}
+                        html={q.question}
                       />
                     </div>
                     {/* Arrow */}
@@ -653,6 +858,7 @@ function PracticeView({
   const [selected, setSelected] = useState<number | null>(null);
   const [numInput, setNumInput] = useState("");
   const [answered, setAnswered] = useState(false);
+  const [checking, setChecking] = useState(false); // waiting on the submit round-trip
   const [correct, setCorrect] = useState<boolean | null>(null);
   const [showExp, setShowExp] = useState(false);
   // Reveal data comes from the server AFTER submitting (never pre-loaded → no answer leak)
@@ -692,6 +898,7 @@ function PracticeView({
   const checkAnswer = async () => {
     const q = questions[cur];
     setAnswered(true);
+    setChecking(true);
     // Server is authoritative for correctness. MCQ → send the option LETTER (A/B/C/D),
     // numerical → send the typed value, both via `selectedOption` (the field the API reads).
     const selectedOption = q.question_type === "numerical"
@@ -708,72 +915,35 @@ function PracticeView({
       setRevealIndex(d?.correctIndex ?? null);
       setRevealAnswer(d?.correctOption ?? null);
       setRevealExp(d?.explanation ?? null);
+      histRef.current[cur] = { selected, numInput, correct: isCorrect, revealIndex: d?.correctIndex ?? null, revealAnswer: d?.correctOption ?? null, revealExp: d?.explanation ?? null };
       setPracticeAnswers(p => [...p, { questionId: q.id, topic: q.topic, correct: isCorrect, time: timeSpent }]);
     } catch {
       setCorrect(false);
+      histRef.current[cur] = { selected, numInput, correct: false, revealIndex: null, revealAnswer: null, revealExp: null };
+    } finally {
+      setChecking(false);
     }
   };
 
-  const nextQ = () => { setSelected(null); setNumInput(""); setAnswered(false); setCorrect(null); setShowExp(false); setRevealIndex(null); setRevealAnswer(null); setRevealExp(null); setTimeSpent(0); setCur(p => p + 1); };
+  // Per-question snapshots so Previous/Next can revisit answered questions
+  // without re-submitting attempts.
+  const histRef = useRef<Record<number, { selected: number | null; numInput: string; correct: boolean | null; revealIndex: number | null; revealAnswer: string | null; revealExp: string | null }>>({});
+  const loadIdx = (idx: number) => {
+    const h = histRef.current[idx];
+    setSelected(h?.selected ?? null);
+    setNumInput(h?.numInput ?? "");
+    setAnswered(!!h);
+    setCorrect(h?.correct ?? null);
+    setRevealIndex(h?.revealIndex ?? null);
+    setRevealAnswer(h?.revealAnswer ?? null);
+    setRevealExp(h?.revealExp ?? null);
+    setShowExp(false);
+    setTimeSpent(0);
+    setCur(idx);
+  };
+  const nextQ = () => { if (!checking) loadIdx(cur + 1); };
+  const prevQ = () => { if (!checking && cur > 0) loadIdx(cur - 1); };
   const q = questions[cur];
-
-  // ── Neural-network canvas ──
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const rafRef    = useRef<number>(0);
-  useEffect(() => {
-    const canvas = canvasRef.current; if (!canvas) return;
-    const ctx = canvas.getContext("2d"); if (!ctx) return;
-    // Capture non-null refs for closures — already guarded above
-    const cvs = canvas as HTMLCanvasElement;
-    const c2d = ctx as CanvasRenderingContext2D;
-    let W = 0, H = 0;
-    type NNNode = { x:number; y:number; phase:number; speed:number; radius:number };
-    type NNEdge = { a:number; b:number; phase:number; flowSpeed:number; lit:boolean; litTimer:number; litDuration:number };
-    let nodes: NNNode[] = [], edges: NNEdge[] = [], t = 0;
-    const GRID = 88, NODE_P = 0.21, MAX_D = 195, EDGE_P = 0.38;
-    function build() {
-      nodes = []; edges = [];
-      const cols = Math.ceil(W/GRID)+1, rows = Math.ceil(H/GRID)+1, jit = GRID*0.22;
-      for (let ci=0;ci<cols;ci++) for (let r=0;r<rows;r++)
-        if (Math.random()<NODE_P) nodes.push({ x:ci*GRID+(Math.random()-.5)*jit, y:r*GRID+(Math.random()-.5)*jit, phase:Math.random()*Math.PI*2, speed:.35+Math.random()*.65, radius:.9+Math.random()*1.1 });
-      for (let i=0;i<nodes.length;i++) for (let j=i+1;j<nodes.length;j++) {
-        const dx=nodes[j].x-nodes[i].x, dy=nodes[j].y-nodes[i].y, d=Math.sqrt(dx*dx+dy*dy);
-        if (d<MAX_D&&Math.random()<EDGE_P) edges.push({ a:i,b:j,phase:Math.random()*Math.PI*2,flowSpeed:.14+Math.random()*.3,lit:false,litTimer:Math.floor(Math.random()*500),litDuration:180+Math.floor(Math.random()*280) });
-      }
-    }
-    function resize() { W=cvs.width=window.innerWidth; H=cvs.height=window.innerHeight; build(); }
-    function draw() {
-      c2d.clearRect(0,0,W,H); t+=.006;
-      c2d.strokeStyle="rgba(210,130,40,0.052)"; c2d.lineWidth=.5;
-      for (let x=0;x<=W;x+=GRID){c2d.beginPath();c2d.moveTo(x,0);c2d.lineTo(x,H);c2d.stroke();}
-      for (let y=0;y<=H;y+=GRID){c2d.beginPath();c2d.moveTo(0,y);c2d.lineTo(W,y);c2d.stroke();}
-      for (const e of edges) {
-        const na=nodes[e.a],nb=nodes[e.b];
-        e.litTimer++;
-        if (!e.lit&&e.litTimer>280+Math.random()*420){e.lit=true;e.litTimer=0;}
-        if (e.lit&&e.litTimer>e.litDuration){e.lit=false;e.litTimer=0;}
-        c2d.strokeStyle=`rgba(212,120,32,${e.lit?.21:.055})`; c2d.lineWidth=e.lit?.75:.5;
-        c2d.beginPath();c2d.moveTo(na.x,na.y);c2d.lineTo(nb.x,nb.y);c2d.stroke();
-        if (e.lit){
-          const p=Math.sin(t*e.flowSpeed*3+e.phase)*.5+.5, fx=na.x+(nb.x-na.x)*p, fy=na.y+(nb.y-na.y)*p;
-          const g=c2d.createRadialGradient(fx,fy,0,fx,fy,6);
-          g.addColorStop(0,"rgba(212,120,32,0.52)"); g.addColorStop(1,"rgba(212,120,32,0)");
-          c2d.fillStyle=g; c2d.beginPath(); c2d.arc(fx,fy,6,0,Math.PI*2); c2d.fill();
-        }
-      }
-      for (const n of nodes) {
-        const pulse=Math.sin(t*n.speed+n.phase), alpha=.27+pulse*.13, r=n.radius+pulse*.3;
-        const h=c2d.createRadialGradient(n.x,n.y,0,n.x,n.y,r*5);
-        h.addColorStop(0,`rgba(212,120,32,${alpha*.85})`); h.addColorStop(.4,`rgba(212,120,32,${alpha*.22})`); h.addColorStop(1,"rgba(212,120,32,0)");
-        c2d.fillStyle=h; c2d.beginPath(); c2d.arc(n.x,n.y,r*5,0,Math.PI*2); c2d.fill();
-        c2d.fillStyle=`rgba(212,120,32,${alpha+.08})`; c2d.beginPath(); c2d.arc(n.x,n.y,r*.62,0,Math.PI*2); c2d.fill();
-      }
-      rafRef.current = requestAnimationFrame(draw);
-    }
-    window.addEventListener("resize", resize);
-    resize(); draw();
-    return () => { window.removeEventListener("resize", resize); cancelAnimationFrame(rafRef.current); };
-  }, []);
 
   const OR = "#D4780A";
   const OR_SOFT = "rgba(212,120,10,0.07)";
@@ -781,11 +951,9 @@ function PracticeView({
 
   // ── Render ──
   return (
-    <div style={{ minHeight: "100vh", background: "#ffffff", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif", position: "relative", overflowX: "hidden" }}>
-      <canvas ref={canvasRef} style={{ position: "fixed", inset: 0, width: "100%", height: "100%", pointerEvents: "none", zIndex: 0 }} />
-
+    <div style={{ minHeight: "100vh", background: "linear-gradient(165deg,#FCEFDC 0%,#FBF5EB 46%,#F7E6D2 100%)", fontFamily: "'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif", position: "relative", overflowX: "hidden" }}>
       {/* ── Top bar ── */}
-      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10, height: 52, background: "rgba(255,255,255,0.9)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(212,120,10,0.10)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px" }}>
+      <header style={{ position: "fixed", top: 0, left: 0, right: 0, zIndex: 10, height: 52, background: "rgba(255,253,248,0.88)", backdropFilter: "blur(12px)", WebkitBackdropFilter: "blur(12px)", borderBottom: "1px solid rgba(212,120,10,0.12)", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 28px" }}>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           <button onClick={onExit} style={{ background: "none", border: "none", cursor: "pointer", display: "flex", alignItems: "center", gap: 5, fontSize: 12.5, fontWeight: 500, color: "#6b6b6b", padding: "4px 0" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m15 18-6-6 6-6"/></svg>Back
@@ -797,22 +965,11 @@ function PracticeView({
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
           {!loading && questions.length > 0 && cur < questions.length && (
-            <>
-              {/* bookmark */}
-              {q && (
-                <button onClick={() => onToggleBookmark(q)} style={{ background: "none", border: "none", cursor: "pointer", padding: 4, display: "flex" }}>
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks[q.id] ? OR : "none"} stroke={bookmarks[q.id] ? OR : "#b0b0b0"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
-                </button>
-              )}
-              {/* timer */}
-              <span style={{ fontSize: 12, fontWeight: 500, color: "#6b6b6b", fontVariantNumeric: "tabular-nums" }}>⏱ {fmt(timeSpent)}</span>
-              {/* counter */}
-              <span style={{ fontSize: 11.5, fontWeight: 500, color: OR, background: "rgba(212,120,10,0.08)", padding: "4px 11px", borderRadius: 20, letterSpacing: "0.04em" }}>
-                {cur+1} / {questions.length}
-              </span>
-            </>
+            <span style={{ fontSize: 11.5, fontWeight: 500, color: OR, background: "rgba(212,120,10,0.08)", padding: "4px 11px", borderRadius: 20, letterSpacing: "0.04em" }}>
+              {cur+1} / {questions.length}
+            </span>
           )}
-          <span style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.06em", color: "#b0b0b0", textTransform: "uppercase" }}>{exam.toUpperCase()}</span>
+          <span style={{ fontSize: 10.5, fontWeight: 500, letterSpacing: "0.06em", color: "#b0a08a", textTransform: "uppercase" }}>{exam.toUpperCase()}</span>
         </div>
       </header>
 
@@ -832,7 +989,7 @@ function PracticeView({
           <div style={{ textAlign: "center" }}>
             <p style={{ fontSize: 44, marginBottom: 14 }}>🔍</p>
             <h3 style={{ fontSize: 20, fontWeight: 600, color: "#0e0e0e", marginBottom: 8 }}>No Questions Found</h3>
-            <p style={{ fontSize: 14, color: "#b0b0b0", marginBottom: 28 }}>Try a different chapter or topic.</p>
+            <p style={{ fontSize: 14, color: "#8a8a8a", marginBottom: 28 }}>Try a different chapter or topic.</p>
             <button onClick={onExit} style={{ background: OR, color: "#fff", border: "none", borderRadius: 12, padding: "11px 28px", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>← Back</button>
           </div>
         )}
@@ -867,7 +1024,7 @@ function PracticeView({
                 </div>
                 <div style={{ display: "flex", gap: 12 }}>
                   <button onClick={onExit} style={{ flex: 1, background: "#fff", border: "1px solid rgba(0,0,0,0.1)", color: "#0e0e0e", borderRadius: 14, padding: "13px 0", fontSize: 13, fontWeight: 500, cursor: "pointer" }}>← Back to Chapters</button>
-                  <button onClick={() => { setCur(0); setSelected(null); setNumInput(""); setAnswered(false); setCorrect(null); setShowExp(false); setRevealIndex(null); setRevealAnswer(null); setRevealExp(null); setPracticeAnswers([]); setTimeSpent(0); setQuestions(qq=>[...qq].sort(()=>0.5-Math.random())); }} style={{ flex: 1, background: OR, color: "#fff", border: "none", borderRadius: 14, padding: "13px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Try Again →</button>
+                  <button onClick={() => { histRef.current = {}; setCur(0); setSelected(null); setNumInput(""); setAnswered(false); setCorrect(null); setShowExp(false); setRevealIndex(null); setRevealAnswer(null); setRevealExp(null); setPracticeAnswers([]); setTimeSpent(0); setQuestions(qq=>[...qq].sort(()=>0.5-Math.random())); }} style={{ flex: 1, background: OR, color: "#fff", border: "none", borderRadius: 14, padding: "13px 0", fontSize: 13, fontWeight: 600, cursor: "pointer" }}>Try Again →</button>
                 </div>
               </div>
             </div>
@@ -876,72 +1033,82 @@ function PracticeView({
 
         {/* QUESTION CARD */}
         {!loading && questions.length > 0 && cur < questions.length && (
-          <div style={{ width: "100%", maxWidth: 900 }}>
-            {/* meta pill row above card */}
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 16, justifyContent: "center" }}>
-              {q?.exam && q?.year && <span style={{ fontSize: 11, fontWeight: 500, color: "#b0b0b0", background: "rgba(255,255,255,0.8)", border: "1px solid rgba(0,0,0,0.07)", padding: "3px 11px", borderRadius: 20, backdropFilter: "blur(4px)" }}>{q.exam.toUpperCase()} {q.year}</span>}
-              {q?.difficulty && <span style={{ fontSize: 11, fontWeight: 500, color: q.difficulty==="Hard"?"#dc2626":q.difficulty==="Easy"?"#16a34a":"#d97706", background: "rgba(255,255,255,0.8)", border: "1px solid rgba(0,0,0,0.07)", padding: "3px 11px", borderRadius: 20, backdropFilter: "blur(4px)" }}>{q.difficulty}</span>}
-              {q?.question_type === "numerical" && <span style={{ fontSize: 11, fontWeight: 500, color: "#7c3aed", background: "rgba(255,255,255,0.8)", border: "1px solid rgba(0,0,0,0.07)", padding: "3px 11px", borderRadius: 20, backdropFilter: "blur(4px)" }}>Numerical</span>}
-            </div>
+          <div style={{ width: "100%", maxWidth: 940 }}>
+            {/* Elevated paper card so the question stands out from the page background */}
+            <div style={{ background: "#FFFFFF", border: "1px solid rgba(212,120,10,0.16)", borderRadius: 24, padding: "clamp(24px, 4vw, 44px)", boxShadow: "0 24px 60px -28px rgba(150,100,30,0.35), 0 3px 10px rgba(120,80,20,0.06)" }}>
 
-            {/* floating card */}
-            <div style={{ background: "rgba(255,251,246,0.88)", border: "1px solid rgba(255,165,0,0.10)", borderRadius: 28, padding: "52px 56px 48px", boxShadow: "inset 0 1px 0 rgba(255,255,255,0.85),0 2px 4px rgba(200,110,10,0.04),0 8px 24px rgba(200,110,10,0.06),0 32px 72px rgba(0,0,0,0.07)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", animation: "pvCardFloat 7s ease-in-out infinite" }}>
-
-              {/* question label */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11.5, fontWeight: 500, letterSpacing: "0.09em", color: OR, textTransform: "uppercase", marginBottom: 9 }}>Question {cur + 1}</div>
-                <div style={{ width: 26, height: 1.5, borderRadius: 2, background: "linear-gradient(90deg,rgba(212,120,10,0.65),rgba(212,120,10,0))" }} />
+              {/* header row: Q number + source | timer | bookmark */}
+              <div style={{ display: "grid", gridTemplateColumns: "1fr auto 1fr", alignItems: "start", gap: 16, marginBottom: 30 }}>
+                <div>
+                  <div style={{ fontSize: 15.5, fontWeight: 700, color: "#2E2620", letterSpacing: "0.01em" }}>Q {cur + 1}</div>
+                  <div style={{ fontSize: 13, color: "#8C7D6E", marginTop: 5 }}>
+                    {q?.exam ? q.exam.toUpperCase().replace(/-/g, " ") : "JEE"}{q?.year ? ` ${q.year}` : ""}
+                    {q?.difficulty ? ` · ${q.difficulty[0].toUpperCase()}${q.difficulty.slice(1)}` : ""}
+                    {q?.question_type === "numerical" ? " · Numerical" : ""}
+                  </div>
+                </div>
+                {/* timer pill (center) */}
+                <div style={{ display: "inline-flex", alignItems: "center", gap: 7, border: "1.5px dashed rgba(212,120,10,0.5)", borderRadius: 999, padding: "7px 17px", color: "#C7600F", fontSize: 14.5, fontWeight: 600, fontVariantNumeric: "tabular-nums", background: "rgba(212,120,10,0.05)" }}>
+                  <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
+                  {fmt(timeSpent)}
+                </div>
+                {/* bookmark (right) */}
+                <div style={{ display: "flex", justifyContent: "flex-end" }}>
+                  {q && (
+                    <button onClick={() => onToggleBookmark(q)} aria-label="Bookmark question"
+                      style={{ width: 42, height: 42, borderRadius: 11, border: "1px solid rgba(120,85,30,0.2)", background: "#FBF7EF", display: "flex", alignItems: "center", justifyContent: "center", cursor: "pointer" }}>
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill={bookmarks[q.id] ? OR : "none"} stroke={bookmarks[q.id] ? OR : "#b0b0b0"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m19 21-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"/></svg>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* question text */}
-              <div style={{ fontSize: 21, fontWeight: 400, lineHeight: 1.68, color: "#0e0e0e", letterSpacing: "-0.015em", marginBottom: 34, textWrap: "pretty" } as React.CSSProperties}
-                dangerouslySetInnerHTML={{ __html: q?.question || "" }} />
+              <MathHtml stripOptions style={{ fontSize: 19.5, fontWeight: 500, lineHeight: 1.75, color: "#1F1A13", letterSpacing: "-0.005em", marginBottom: 36, textWrap: "pretty" } as React.CSSProperties}
+                html={q?.question || ""} />
 
               {/* options or numerical */}
               {q?.question_type === "numerical" ? (
                 <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-                  <p style={{ fontSize: 12, fontWeight: 500, color: "#b0b0b0", letterSpacing: "0.04em", textTransform: "uppercase" }}>Enter your answer</p>
+                  <p style={{ fontSize: 12, fontWeight: 500, color: "#8C7D6E", letterSpacing: "0.04em", textTransform: "uppercase" }}>Enter your answer</p>
                   <input type="text" disabled={answered} placeholder="e.g. 4, −1.5" value={numInput} onChange={e => setNumInput(e.target.value)}
-                    style={{ maxWidth: 320, padding: "16px 20px", borderRadius: 16, border: `1.5px solid ${answered ? (correct ? "#16a34a" : "#dc2626") : "rgba(0,0,0,0.085)"}`, background: answered ? (correct ? "rgba(22,163,74,0.05)" : "rgba(220,38,38,0.05)") : "#fff", color: "#0e0e0e", fontSize: 16, fontFamily: "monospace", outline: "none", transition: "border-color .2s" }} />
+                    style={{ maxWidth: 320, padding: "16px 20px", borderRadius: 12, border: `1.5px solid ${answered && correct != null ? (correct ? "#16a34a" : "#dc2626") : "rgba(0,0,0,0.1)"}`, background: answered && correct != null ? (correct ? "rgba(22,163,74,0.05)" : "rgba(220,38,38,0.05)") : "#fff", color: "#0e0e0e", fontSize: 16, fontFamily: "monospace", outline: "none", transition: "border-color .2s, background .2s" }} />
                   {answered && revealAnswer != null && <p style={{ fontSize: 13, color: "#6b6b6b" }}>Correct answer: <span style={{ color: "#16a34a", fontWeight: 600 }}>{revealAnswer}</span></p>}
                 </div>
               ) : (
-                <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(min(100%, 340px), 1fr))", gap: 16 }}>
                   {q?.options?.map((opt, i) => {
-                    const sel = selected === i, ok = answered && revealIndex === i, wrong = answered && sel && !ok;
-                    let bg  = "#ffffff", brd = "rgba(0,0,0,0.085)", col = "#0e0e0e";
-                    let bdgBrd = "rgba(0,0,0,0.13)", bdgCol = "#888", bdgBg = "#fff";
-                    if (!answered && sel) { bg = OR_SOFT; brd = OR_MID; bdgBrd = OR; bdgCol = OR; bdgBg = "rgba(212,120,10,0.07)"; }
-                    if (ok)    { bg = "rgba(22,163,74,0.07)";  brd = "rgba(22,163,74,0.5)";   col = "#14532d"; bdgBrd = "#16a34a"; bdgCol = "#16a34a"; bdgBg = "rgba(22,163,74,0.1)"; }
-                    if (wrong) { bg = "rgba(220,38,38,0.07)";  brd = "rgba(220,38,38,0.4)";   col = "#7f1d1d"; bdgBrd = "#dc2626"; bdgCol = "#dc2626"; bdgBg = "rgba(220,38,38,0.1)"; }
-                    if (answered && !ok && !wrong) { col = "#b0b0b0"; }
+                    // Colors only change once the server verdict is in — until then the
+                    // selection stays orange (no red→green flash while the request runs).
+                    const resolved = answered && !checking && (revealIndex != null || correct != null);
+                    const sel = selected === i, ok = resolved && revealIndex === i, wrong = resolved && sel && !ok;
+                    let bg  = "#FBF7EF", brd = "rgba(120,85,30,0.16)", col = "#2E2620";
+                    let bdgBrd = "rgba(120,85,30,0.25)", bdgCol = "#7a6a55", bdgBg = "#fff";
+                    if (!resolved && sel) { bg = "rgba(212,120,10,0.06)"; brd = "rgba(212,120,10,0.55)"; bdgBrd = OR; bdgCol = "#fff"; bdgBg = OR; }
+                    if (ok)    { bg = "rgba(22,163,74,0.07)";  brd = "rgba(22,163,74,0.5)";  col = "#14532d"; bdgBrd = "#16a34a"; bdgCol = "#fff"; bdgBg = "#16a34a"; }
+                    if (wrong) { bg = "rgba(220,38,38,0.06)";  brd = "rgba(220,38,38,0.45)"; col = "#7f1d1d"; bdgBrd = "#dc2626"; bdgCol = "#fff"; bdgBg = "#dc2626"; }
+                    if (resolved && !ok && !wrong) { col = "#b0b0b0"; bdgCol = "#b0b0b0"; }
                     return (
                       <button key={i} disabled={answered} onClick={() => setSelected(i)}
-                        style={{ display: "flex", alignItems: "center", gap: 18, padding: "20px 22px", background: bg, border: `1px solid ${brd}`, borderRadius: 14, cursor: answered ? "default" : "pointer", textAlign: "left", transition: "transform .22s,box-shadow .22s,border-color .2s,background .2s", width: "100%" }}
-                        onMouseEnter={e => { if (!answered && selected !== i) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.boxShadow=`0 0 0 3px ${OR_SOFT},0 6px 18px rgba(212,120,10,0.09)`; e.currentTarget.style.borderColor=OR_MID; } }}
-                        onMouseLeave={e => { if (!answered && selected !== i) { e.currentTarget.style.transform=""; e.currentTarget.style.boxShadow=""; e.currentTarget.style.borderColor="rgba(0,0,0,0.085)"; } }}>
+                        style={{ display: "flex", alignItems: "center", gap: 16, padding: "22px 22px", background: bg, border: `1px solid ${brd}`, borderRadius: 13, cursor: answered ? "default" : "pointer", textAlign: "left", transition: "transform .18s,border-color .18s,background .18s", width: "100%", minHeight: 76 }}
+                        onMouseEnter={e => { if (!answered && selected !== i) { e.currentTarget.style.transform="translateY(-2px)"; e.currentTarget.style.borderColor="rgba(212,120,10,0.4)"; e.currentTarget.style.boxShadow="0 8px 20px -12px rgba(212,120,10,0.3)"; } }}
+                        onMouseLeave={e => { if (!answered && selected !== i) { e.currentTarget.style.transform=""; e.currentTarget.style.borderColor="rgba(120,85,30,0.16)"; e.currentTarget.style.boxShadow=""; } }}>
                         {/* letter badge */}
-                        <div style={{ width: 34, height: 34, borderRadius: "50%", border: `1.5px solid ${bdgBrd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 500, color: bdgCol, background: bdgBg, flexShrink: 0, transition: "border-color .2s,color .2s,background .2s" }}>
+                        <div style={{ width: 32, height: 32, borderRadius: "50%", border: `1.5px solid ${bdgBrd}`, display: "flex", alignItems: "center", justifyContent: "center", fontSize: 12.5, fontWeight: 600, color: bdgCol, background: bdgBg, flexShrink: 0, transition: "border-color .18s,color .18s,background .18s" }}>
                           {"ABCDE"[i]}
                         </div>
                         {/* option text */}
-                        <div style={{ flex: 1, fontSize: 16, lineHeight: 1.5, color: col, padding: "2px 0" }}
-                          dangerouslySetInnerHTML={{ __html: opt }} />
-                        {/* checkmark (selected pre-answer) */}
-                        {!answered && sel && (
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: OR, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                            <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,9 6.5,13 13,4"/></svg>
-                          </div>
-                        )}
+                        <MathHtml style={{ flex: 1, fontSize: 16, lineHeight: 1.55, color: col, padding: "2px 0" }}
+                          html={opt} />
                         {/* correct tick after answer */}
                         {answered && ok && (
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#16a34a", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <svg width="13" height="13" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><polyline points="3,9 6.5,13 13,4"/></svg>
                           </div>
                         )}
                         {/* wrong cross */}
                         {answered && wrong && (
-                          <div style={{ width: 28, height: 28, borderRadius: "50%", background: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
+                          <div style={{ width: 26, height: 26, borderRadius: "50%", background: "#dc2626", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                             <svg width="12" height="12" viewBox="0 0 16 16" fill="none" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="3" x2="13" y2="13"/><line x1="13" y1="3" x2="3" y2="13"/></svg>
                           </div>
                         )}
@@ -951,37 +1118,47 @@ function PracticeView({
                 </div>
               )}
 
-              {/* ── Action row ── */}
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginTop: 32, paddingTop: 24, borderTop: "1px solid rgba(212,120,10,0.09)" }}>
-                <div>
-                  {answered && revealExp && (
-                    <button onClick={() => setShowExp(p => !p)} style={{ background: "none", border: "1px solid rgba(0,0,0,0.1)", color: "#6b6b6b", borderRadius: 10, padding: "8px 16px", fontSize: 12.5, fontWeight: 500, cursor: "pointer" }}>
-                      {showExp ? "Hide explanation ▲" : "Show explanation ▼"}
-                    </button>
-                  )}
+              {/* explanation toggle */}
+              {answered && revealExp && (
+                <div style={{ marginTop: 22 }}>
+                  <button onClick={() => setShowExp(p => !p)} style={{ background: "none", border: "1px solid rgba(0,0,0,0.12)", color: "#6b6b6b", borderRadius: 10, padding: "8px 16px", fontSize: 12.5, fontWeight: 500, cursor: "pointer" }}>
+                    {showExp ? "Hide explanation ▲" : "Show explanation ▼"}
+                  </button>
                 </div>
-                <div>
-                  {!answered
-                    ? <button disabled={q?.question_type === "numerical" ? !numInput.trim() : selected === null} onClick={checkAnswer}
-                        style={{ background: (q?.question_type === "numerical" ? !numInput.trim() : selected === null) ? "rgba(0,0,0,0.05)" : OR, color: (q?.question_type === "numerical" ? !numInput.trim() : selected === null) ? "#b0b0b0" : "#fff", border: "none", borderRadius: 12, padding: "11px 28px", fontSize: 13.5, fontWeight: 600, cursor: (q?.question_type === "numerical" ? !numInput.trim() : selected === null) ? "not-allowed" : "pointer", transition: "background .2s,color .2s" }}>
-                        Submit
-                      </button>
-                    : <button onClick={nextQ}
-                        style={{ background: OR, color: "#fff", border: "none", borderRadius: 12, padding: "11px 28px", fontSize: 13.5, fontWeight: 600, cursor: "pointer" }}>
-                        {cur + 1 < questions.length ? "Next →" : "Finish →"}
-                      </button>
-                  }
+              )}
+
+              {/* ── Explanation panel ── */}
+              {showExp && revealExp && (
+                <div style={{ marginTop: 14, background: "#FBF7EF", border: "1px solid rgba(212,120,10,0.22)", borderRadius: 14, padding: "26px 30px" }}>
+                  <p style={{ fontSize: 11, fontWeight: 700, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>📝 Explanation</p>
+                  <MathHtml className="pv-exp" html={revealExp} />
                 </div>
+              )}
+
+              {/* ── Bottom bar: Previous | Check Answer | Next ── */}
+              <div style={{ display: "flex", justifyContent: "center", alignItems: "center", gap: 16, marginTop: 48, flexWrap: "wrap" }}>
+                <button disabled={cur === 0} onClick={prevQ}
+                  style={{ minWidth: 150, padding: "14px 30px", borderRadius: 12, border: "1px solid rgba(0,0,0,0.1)", background: "#fff", color: cur === 0 ? "#c4c4c4" : "#6b6b6b", fontSize: 14, fontWeight: 600, cursor: cur === 0 ? "default" : "pointer", opacity: cur === 0 ? 0.6 : 1, transition: "background .18s" }}>
+                  Previous
+                </button>
+                <button
+                  disabled={answered || (q?.question_type === "numerical" ? !numInput.trim() : selected === null)}
+                  onClick={checkAnswer}
+                  style={(() => {
+                    const off = answered || (q?.question_type === "numerical" ? !numInput.trim() : selected === null);
+                    return { minWidth: 190, padding: "14px 34px", borderRadius: 12, border: "none", background: checking ? "linear-gradient(120deg,#F2A52A,#E0701E)" : off ? "rgba(0,0,0,0.06)" : "linear-gradient(120deg,#F2A52A,#E0701E)", color: checking ? "#fff" : off ? "#b0b0b0" : "#fff", fontSize: 14, fontWeight: 700, cursor: off ? "default" : "pointer", boxShadow: off && !checking ? "none" : "0 10px 24px -10px rgba(224,112,30,0.7)", transition: "background .18s,color .18s", display: "inline-flex", alignItems: "center", justifyContent: "center", gap: 9 };
+                  })()}>
+                  {checking && <span style={{ width: 14, height: 14, borderRadius: "50%", border: "2.5px solid rgba(255,255,255,0.4)", borderTopColor: "#fff", animation: "spin .7s linear infinite", flexShrink: 0 }} />}
+                  {checking ? "Checking…" : "Check Answer"}
+                </button>
+                <button onClick={nextQ}
+                  style={{ minWidth: 150, padding: "14px 30px", borderRadius: 12, border: "1px solid rgba(212,120,10,0.35)", background: "#fff", color: "#C7600F", fontSize: 14, fontWeight: 600, cursor: "pointer", transition: "background .18s" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = "rgba(212,120,10,0.06)"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#fff"; }}>
+                  {cur + 1 < questions.length ? "Next" : "Finish"}
+                </button>
               </div>
             </div>
-
-            {/* ── Explanation panel (below card) ── */}
-            {showExp && revealExp && (
-              <div style={{ marginTop: 16, background: "rgba(255,251,246,0.9)", border: "1px solid rgba(255,165,0,0.12)", borderRadius: 20, padding: "24px 28px", backdropFilter: "blur(2px)" }}>
-                <p style={{ fontSize: 11, fontWeight: 500, color: "#16a34a", textTransform: "uppercase", letterSpacing: "0.08em", marginBottom: 12 }}>📝 Explanation</p>
-                <div style={{ fontSize: 15, color: "#0e0e0e", lineHeight: 1.75 }} dangerouslySetInnerHTML={{ __html: revealExp }} />
-              </div>
-            )}
           </div>
         )}
       </div>
@@ -989,6 +1166,26 @@ function PracticeView({
       <style>{`
         @keyframes spin { to { transform: rotate(360deg); } }
         @keyframes pvCardFloat { 0%,100%{ transform:translateY(0); } 50%{ transform:translateY(-10px); } }
+        /* Explanation typography — readable prose + breathing room around formulas */
+        .pv-exp {
+          font-size: 15.5px;
+          line-height: 2;
+          color: #3A2E26;
+          word-spacing: 0.02em;
+          overflow-x: auto;
+        }
+        .pv-exp p { margin: 0 0 14px; }
+        .pv-exp p:last-child { margin-bottom: 0; }
+        .pv-exp b, .pv-exp strong { color: #2E2620; }
+        .pv-exp sup, .pv-exp sub { line-height: 0; }
+        .pv-exp mjx-container {
+          margin: 3px 2px;
+          font-size: 108% !important;
+          vertical-align: middle;
+        }
+        .pv-exp mjx-container[display="true"] { margin: 14px 0; }
+        /* Question + option math: consistent inline spacing */
+        mjx-container { padding: 1px 0; }
       `}</style>
     </div>
   );
@@ -1051,12 +1248,6 @@ function ExamSelect({ streakDays, onSelect }: { streakDays: number; onSelect: (e
             <div style={{ padding: "22px 22px 24px" }}>
               <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: T.ink }}>JEE</div>
               <div style={{ color: "#7c4a2a", fontSize: 14, fontWeight: 600, marginTop: 2 }}>Crack JEE Main &amp; Advanced</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: T.brand700 }}>2,45,000+ Questions</div>
-                <div style={{ width: 46, height: 46, borderRadius: "50%", background: "linear-gradient(135deg,#FF8A3D,#E2540B)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 8px 20px rgba(226,84,11,.4)" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
-                </div>
-              </div>
             </div>
           </article>
 
@@ -1074,21 +1265,8 @@ function ExamSelect({ streakDays, onSelect }: { streakDays: number; onSelect: (e
             <div style={{ padding: "22px 22px 24px" }}>
               <div style={{ fontSize: 34, fontWeight: 800, letterSpacing: -1, color: T.ink }}>NEET</div>
               <div style={{ color: "#357a52", fontSize: 14, fontWeight: 600, marginTop: 2 }}>Crack NEET UG</div>
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginTop: 18 }}>
-                <div style={{ fontWeight: 700, fontSize: 15, color: T.green700 }}>2,10,000+ Questions</div>
-                <div style={{ width: 46, height: 46, borderRadius: "50%", background: "linear-gradient(135deg,#5FBF7E,#16834A)", display: "flex", alignItems: "center", justifyContent: "center", color: "#fff", boxShadow: "0 8px 20px rgba(22,131,74,.4)" }}>
-                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
-                </div>
-              </div>
             </div>
           </article>
-        </div>
-
-        <div style={{ display: "flex", justifyContent: "center", marginTop: 30 }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 10, background: T.surface, border: `1px solid ${T.line}`, borderRadius: 999, padding: "12px 20px", fontSize: 14, fontWeight: 600, color: T.muted, cursor: "pointer", boxShadow: "0 6px 18px rgba(0,0,0,.04)" }}>
-            Not sure which exam to choose?
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke={T.brand500} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="5" y1="12" x2="19" y2="12"/><path d="M12 5l7 7-7 7"/></svg>
-          </div>
         </div>
       </div>
 
@@ -1144,12 +1322,6 @@ function AppShell({
   const [selectedChapter, setSelectedChapter] = useState<Chapter | null>(null);
   const [hasNewAnalysis, setHasNewAnalysis] = useState(false);
   const [showNotifPopup, setShowNotifPopup] = useState(false);
-
-  const [filterOpen, setFilterOpen] = useState(false);
-  const [pendingSort, setPendingSort] = useState<"newest"|"oldest">(filterSort);
-  const [pendingYears, setPendingYears] = useState<number[]>(filterYears);
-  const [pendingDifficulty, setPendingDifficulty] = useState<string[]>(filterDifficulty);
-  const [pendingLevel, setPendingLevel] = useState<string>(filterLevel);
 
   useEffect(() => {
     setLoadingChapters(true); setShowAll(false); setSelectedChapter(null); setPyqType("all");
@@ -1242,7 +1414,7 @@ function AppShell({
           </button>
         </div>
 
-        {/* Subject tabs + Filter button */}
+        {/* Subject tabs */}
         <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 22, flexWrap: "wrap" }}>
           {subjects.map(s => {
             const active = s === activeSubject;
@@ -1253,17 +1425,6 @@ function AppShell({
               </button>
             );
           })}
-          <button
-            onClick={() => { setPendingSort(filterSort); setPendingYears(filterYears); setPendingDifficulty(filterDifficulty); setPendingLevel(filterLevel); setFilterOpen(true); }}
-            style={{ display: "flex", alignItems: "center", gap: 7, padding: "10px 18px", borderRadius: 14, cursor: "pointer", fontWeight: 700, fontSize: 14, background: (filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? T.brandGrad : T.surface, border: `1px solid ${(filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? "transparent" : T.line}`, color: (filterYears.length > 0 || filterDifficulty.length > 0 || filterLevel) ? "#fff" : T.ink, transition: "all .25s", position: "relative", marginLeft: "auto", flexShrink: 0 }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 3H2l8 9.46V19l4 2v-8.54L22 3z"/></svg>
-            Filters
-            {(filterYears.length + filterDifficulty.length + (filterLevel ? 1 : 0)) > 0 && (
-              <span style={{ position: "absolute", top: -7, right: -7, minWidth: 20, height: 20, padding: "0 4px", borderRadius: 999, background: "#fff", color: T.brand500, fontSize: 11, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center", border: `2px solid ${T.brand500}` }}>
-                {filterYears.length + filterDifficulty.length + (filterLevel ? 1 : 0)}
-              </span>
-            )}
-          </button>
         </div>
 
         {/* Chapters */}
@@ -1573,129 +1734,6 @@ function AppShell({
 
       </main>
 
-      {/* Filter overlay + drawer */}
-      {filterOpen && (
-        <>
-          <div onClick={() => setFilterOpen(false)} style={{ position: "fixed", inset: 0, background: "rgba(20,12,4,0.45)", backdropFilter: "blur(2px)", zIndex: 70 }} />
-          <div style={{ position: "fixed", top: 0, right: 0, bottom: 0, width: 380, maxWidth: "100vw", background: "#fff", zIndex: 80, boxShadow: "-8px 0 40px rgba(40,20,0,0.18)", display: "flex", flexDirection: "column", fontFamily: T.font }}>
-            {/* Header */}
-            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", padding: "22px 24px 16px", borderBottom: `1px solid ${T.line}` }}>
-              <span style={{ fontSize: 20, fontWeight: 800, color: T.ink }}>Filters</span>
-              <button onClick={() => setFilterOpen(false)} style={{ width: 36, height: 36, borderRadius: 12, border: `1px solid ${T.line}`, background: "#fff", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center", color: T.muted }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
-              </button>
-            </div>
-
-            {/* Scrollable body */}
-            <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px" }}>
-
-              {/* Sort By */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Sort By</div>
-                <div style={{ display: "flex", gap: 10 }}>
-                  {(["newest", "oldest"] as const).map(s => (
-                    <button key={s} onClick={() => setPendingSort(s)}
-                      style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", gap: 8, padding: "12px 14px", borderRadius: 14, border: `1.5px solid ${pendingSort === s ? T.brand500 : T.line}`, background: pendingSort === s ? T.brandGrad : "#fff", color: pendingSort === s ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">{s === "newest" ? <path d="M12 5v14M5 12l7 7 7-7"/> : <path d="M12 19V5M5 12l7-7 7 7"/>}</svg>
-                      {s === "newest" ? "Newest to Oldest" : "Oldest to Newest"}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Year Filter */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Year Filter</div>
-                <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
-                  {[2026,2025,2024,2023,2022,2021,2020,2019,2018,2017,2016,2015].map(y => {
-                    const on = pendingYears.includes(y);
-                    return (
-                      <button key={y} onClick={() => setPendingYears(on ? pendingYears.filter(x => x !== y) : [...pendingYears, y])}
-                        style={{ padding: "8px 14px", borderRadius: 20, border: `1.5px solid ${on ? T.brand500 : T.line}`, background: on ? T.brandGrad : "#fff", color: on ? "#fff" : T.ink, fontWeight: 700, fontSize: 13, cursor: "pointer" }}>
-                        {y}
-                      </button>
-                    );
-                  })}
-                </div>
-                <div style={{ marginTop: 12, display: "flex", gap: 8 }}>
-                  {[["Last 5 Years", 5], ["Last 10 Years", 10], ["All Years", 0]].map(([label, n]) => (
-                    <button key={label as string} onClick={() => {
-                      if (n === 0) { setPendingYears([]); }
-                      else { const cur = new Date().getFullYear(); setPendingYears(Array.from({length: n as number}, (_, i) => cur - i)); }
-                    }}
-                      style={{ padding: "7px 12px", borderRadius: 10, border: `1px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 600, fontSize: 12, cursor: "pointer" }}>
-                      {label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Student Level */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Student Level</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-                  {[
-                    { label: "Beginner", icon: "🌱", diff: "Easy" },
-                    { label: "Intermediate", icon: "🔥", diff: "Medium" },
-                    { label: "Advanced", icon: "👑", diff: "Hard" },
-                  ].map(lv => {
-                    const on = pendingLevel === lv.label;
-                    return (
-                      <button key={lv.label} onClick={() => { setPendingLevel(on ? "" : lv.label); if (!on) setPendingDifficulty([lv.diff]); else setPendingDifficulty([]); }}
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 8, padding: "16px 10px", borderRadius: 16, border: `2px solid ${on ? T.brand500 : T.line}`, background: on ? "#FFF5EC" : "#fff", cursor: "pointer" }}>
-                        <span style={{ fontSize: 26 }}>{lv.icon}</span>
-                        <span style={{ fontWeight: 700, fontSize: 13, color: on ? T.brand500 : T.ink }}>{lv.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Difficulty Level */}
-              <div style={{ marginBottom: 28 }}>
-                <div style={{ fontSize: 11, fontWeight: 800, letterSpacing: 1.2, color: T.muted, textTransform: "uppercase", marginBottom: 12 }}>Difficulty Level</div>
-                <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr 1fr", gap: 8 }}>
-                  {[
-                    { label: "Easy", color: "#22c55e", bars: [1,1,0,0] },
-                    { label: "Medium", color: "#f59e0b", bars: [1,1,1,0] },
-                    { label: "Hard", color: "#ef4444", bars: [1,1,1,1] },
-                    { label: "Expert", color: "#7c3aed", bars: [1,1,1,1] },
-                  ].map(d => {
-                    const on = pendingDifficulty.includes(d.label);
-                    return (
-                      <button key={d.label} onClick={() => { setPendingDifficulty(on ? pendingDifficulty.filter(x => x !== d.label) : [...pendingDifficulty, d.label]); setPendingLevel(""); }}
-                        style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 6, padding: "14px 8px", borderRadius: 14, border: `2px solid ${on ? d.color : T.line}`, background: on ? `${d.color}15` : "#fff", cursor: "pointer" }}>
-                        <div style={{ display: "flex", alignItems: "flex-end", gap: 2 }}>
-                          {d.bars.map((h, i) => <div key={i} style={{ width: 4, height: 6 + i * 4, borderRadius: 2, background: on ? d.color : (i < (d.label === "Easy" ? 2 : d.label === "Medium" ? 3 : 4) ? d.color : T.line) }} />)}
-                        </div>
-                        <span style={{ fontWeight: 700, fontSize: 12, color: on ? d.color : T.ink }}>{d.label}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-            </div>
-
-            {/* Footer */}
-            <div style={{ borderTop: `1px solid ${T.line}`, padding: "16px 24px" }}>
-              <div style={{ fontSize: 14, fontWeight: 700, color: T.brand500, textAlign: "center", marginBottom: 12 }}>
-                <span style={{ fontWeight: 800 }}>Filters ready to apply</span>
-              </div>
-              <div style={{ display: "flex", gap: 10 }}>
-                <button onClick={() => { setPendingSort("newest"); setPendingYears([]); setPendingDifficulty([]); setPendingLevel(""); onFilterSortChange("newest"); onFilterYearsChange([]); onFilterDifficultyChange([]); onFilterLevelChange(""); }}
-                  style={{ flex: 1, padding: "13px", borderRadius: 14, border: `1.5px solid ${T.line}`, background: "#fff", color: T.ink, fontWeight: 700, fontSize: 14, cursor: "pointer" }}>
-                  Reset
-                </button>
-                <button onClick={() => { onFilterSortChange(pendingSort); onFilterYearsChange(pendingYears); onFilterDifficultyChange(pendingDifficulty); onFilterLevelChange(pendingLevel); setFilterOpen(false); }}
-                  style={{ flex: 2, padding: "13px", borderRadius: 14, border: "none", background: T.brandGrad, color: "#fff", fontWeight: 800, fontSize: 14, cursor: "pointer", boxShadow: "0 8px 20px rgba(255,107,0,.35)" }}>
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
 
       <style>{`
         @keyframes screenIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
@@ -1818,6 +1856,14 @@ function QDContent() {
     }).catch(() => {}).finally(() => setLoadingStats(false));
   }, [screen]);
 
+  // NEET has no question bank / practice engine / analysis yet — catch every
+  // entry point (exam picker, settings toggle, or a direct link with
+  // exam=neet) before it reaches an app/practice/questionlist screen built
+  // only for JEE data.
+  if (exam.toLowerCase() === "neet") {
+    return <NeetComingSoon onBackToJee={() => goApp("jee")} />;
+  }
+
   if (screen === "practice" && practiceSubject) {
     return (
       <PracticeView
@@ -1835,10 +1881,10 @@ function QDContent() {
         subject={practiceSubject} chapter={practiceChapter} topic={practiceTopic} exam={exam}
         onBack={() => router.back()}
         onSelectQuestion={at => goPractice(practiceSubject, practiceChapter, practiceTopic, at)}
-        filterSort={filterSort}
-        filterYears={filterYears}
-        filterDifficulty={filterDifficulty}
-        filterLevel={filterLevel}
+        filterSort={filterSort} onFilterSortChange={setFilterSort}
+        filterYears={filterYears} onFilterYearsChange={setFilterYears}
+        filterDifficulty={filterDifficulty} onFilterDifficultyChange={setFilterDifficulty}
+        filterLevel={filterLevel} onFilterLevelChange={setFilterLevel}
       />
     );
   }

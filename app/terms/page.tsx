@@ -8,9 +8,9 @@ export const metadata: Metadata = {
     "The terms that govern your use of PAPER's JEE and NEET preparation platform.",
 };
 
-// NOTE: Template terms for an Indian ed-tech SaaS. Replace [BRACKETED]
-// placeholders and have a lawyer review before public launch.
-const LAST_UPDATED = "June 28, 2026";
+// NOTE: Terms for an Indian ed-tech SaaS. Update the operating entity when
+// the company is incorporated, and have a lawyer review.
+const LAST_UPDATED = "July 5, 2026";
 
 export default function TermsPage() {
   return (
@@ -24,7 +24,7 @@ export default function TermsPage() {
 
           <p>
             These Terms of Service (&ldquo;Terms&rdquo;) govern your use of PAPER (the
-            &ldquo;Service&rdquo;), operated by [LEGAL ENTITY NAME], India. By creating an
+            &ldquo;Service&rdquo;), operated by Tanishq Tumram, Pune, India. By creating an
             account or using the Service, you agree to these Terms. If you do not agree, do
             not use the Service.
           </p>
@@ -90,19 +90,16 @@ export default function TermsPage() {
           <h2>9. Governing law</h2>
           <p>
             These Terms are governed by the laws of India, and any disputes will be subject to
-            the courts of [CITY / JURISDICTION].
+            the courts of Pune, Maharashtra.
           </p>
 
           <h2>10. Contact</h2>
           <p>
-            Questions about these Terms? Email us at [CONTACT EMAIL]. See also our{" "}
+            Questions about these Terms? Email us at{" "}
+            <a href="mailto:thepaperco26@gmail.com">thepaperco26@gmail.com</a> or visit our{" "}
+            <Link href="/contact">contact page</Link>. See also our{" "}
             <Link href="/privacy">Privacy Policy</Link>.
           </p>
-
-          <div className={styles.notice}>
-            This document is a template and not legal advice. Replace the bracketed
-            placeholders and have it reviewed by a qualified lawyer before launch.
-          </div>
         </article>
       </div>
     </div>

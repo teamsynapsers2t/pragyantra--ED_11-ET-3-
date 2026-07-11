@@ -180,7 +180,7 @@ export default function Home() {
       (function () {
         var el = document.getElementById('typeTarget');
         if (!el) return;
-        var phrases = ['Kinematics weak → Vector Addition?','Thermodynamics weak → Calculus?','Organic weak → GOC?','Rotational weak → Trigonometry?'];
+        var phrases = ['Kinematics weak → Vector Addition?','Integration weak → Differentiation?','Organic weak → GOC?','Electrochemistry weak → Redox Reactions?'];
         var pi = 0, ci = (el.textContent || '').length, deleting = true;
         var tt: ReturnType<typeof setTimeout>;
         function tick() {
@@ -590,7 +590,12 @@ export default function Home() {
               <span style={{fontFamily:"'Instrument Serif',serif",fontSize:24,letterSpacing:1}}>PAPER</span>
               <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:9.5,letterSpacing:2.5,textTransform:"uppercase",color:"rgba(244,241,234,.45)"}}>microweakness engine</span>
             </div>
-            <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:"rgba(244,241,234,.4)"}}>© 2026 PAPER · JEE &amp; NEET</span>
+            <div style={{display:"flex",alignItems:"center",gap:18,flexWrap:"wrap"}}>
+              {[{label:"Privacy",href:"/privacy"},{label:"Terms",href:"/terms"},{label:"Contact",href:"/contact"}].map(l => (
+                <a key={l.href} href={l.href} style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,letterSpacing:1,color:"rgba(244,241,234,.55)",textDecoration:"none"}}>{l.label}</a>
+              ))}
+              <span style={{fontFamily:"'IBM Plex Mono',monospace",fontSize:11,color:"rgba(244,241,234,.4)"}}>© 2026 PAPER · JEE &amp; NEET</span>
+            </div>
           </div>
         </section>
 

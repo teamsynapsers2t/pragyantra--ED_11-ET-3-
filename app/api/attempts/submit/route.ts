@@ -53,19 +53,33 @@ export async function POST(req: Request) {
     // to concept_mastery / weakness_signals without RLS blocking it.
     const supabase = createServiceClient()
 
-    // 1. Fetch question from Supabase
-    const { data: question, error: questionError } = await supabase
-      .from('questions')
-      .select('*')
-      .eq('id', parseInt(String(questionId)))
-      .single()
+    const userUuid = clerkIdToUuid(userId)
 
-    if (questionError || !question) {
-      console.error("[API Attempts] Failed to fetch question:", questionError)
+    // 1-3. These three round-trips are independent — run them in parallel so
+    // the student gets right/wrong feedback fast (was ~4 sequential trips).
+    const [questionRes, userInsertRes, countRes] = await Promise.all([
+      supabase.from('questions').select('*').eq('id', parseInt(String(questionId))).single(),
+      // Ensure user exists in public.users (FK constraint on attempts)
+      supabase.from('users').upsert({ id: userUuid }, { onConflict: 'id' }),
+      // Previous attempts on this question → attempt_order
+      supabase.from('attempts').select('*', { count: 'exact', head: true })
+        .eq('user_id', userUuid).eq('question_id', parseInt(String(questionId))),
+    ])
+
+    const question = questionRes.data
+    if (questionRes.error || !question) {
+      console.error("[API Attempts] Failed to fetch question:", questionRes.error)
       return NextResponse.json({ error: "Question not found" }, { status: 404 })
     }
+    if (userInsertRes.error) {
+      console.warn("[API Attempts] Failed to ensure user in public.users:", userInsertRes.error)
+    }
+    if (countRes.error) {
+      console.error("[API Attempts] Failed to count previous attempts:", countRes.error)
+    }
+    const attemptOrder = (countRes.count || 0) + 1
 
-    // 2. Calculate correctness (server-authoritative)
+    // Calculate correctness (server-authoritative)
     let isCorrect = false
     const qType = question.question_type || 'mcq'
 
@@ -77,30 +91,6 @@ export async function POST(req: Request) {
       // MCQ correctness comparison (case-insensitive)
       isCorrect = String(selectedOption).trim().toUpperCase() === String(question.correct_option).trim().toUpperCase()
     }
-
-    // 3. Convert Clerk ID to UUID
-    const userUuid = clerkIdToUuid(userId)
-
-    // 4. Ensure user exists in public.users table (to satisfy FK constraint)
-    const { error: userInsertError } = await supabase
-      .from('users')
-      .upsert({ id: userUuid }, { onConflict: 'id' })
-
-    if (userInsertError) {
-      console.warn("[API Attempts] Failed to ensure user in public.users:", userInsertError)
-    }
-
-    // 5. Calculate attempt_order
-    const { count, error: countError } = await supabase
-      .from('attempts')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userUuid)
-      .eq('question_id', parseInt(String(questionId)))
-
-    if (countError) {
-      console.error("[API Attempts] Failed to count previous attempts:", countError)
-    }
-    const attemptOrder = (count || 0) + 1
 
     // 6. Validate time_taken_ms — never null/0 (engine depends on this for time-trap detection)
     const validTimeTakenMs = Math.max(1, parseInt(String(timeTakenMs || 1000)))

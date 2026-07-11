@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { clerkIdToUuid } from '@/utils/helpers'
+import { rateLimit, tooManyRequests } from "@/utils/rateLimit"
 
 export async function GET(req: Request) {
   try {
@@ -9,6 +10,9 @@ export async function GET(req: Request) {
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    const rl = rateLimit('progress', userId, 120, 60 * 1000)
+    if (!rl.ok) return tooManyRequests(rl)
 
     const supabase = await createClient()
     const userUuid = clerkIdToUuid(userId)

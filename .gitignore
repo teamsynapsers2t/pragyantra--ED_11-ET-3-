@@ -45,3 +45,6 @@ next-env.d.ts
 
 # Throwaway scripts & debug dumps — may contain secrets, never commit
 scratch/
+
+# Python bytecode
+__pycache__/

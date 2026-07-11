@@ -6,10 +6,12 @@ import { useRouter } from "next/navigation";
 export default function SelectDomainPage() {
   const router = useRouter();
 
-  // 🔥 handle selection
+  // handle selection — go straight into the live practice app for the chosen
+  // exam. (The old /domain-info/[domain] route was removed; this page is legacy
+  // and not linked from the main nav, but keep its one action working.)
   const handleSelect = (domain: string) => {
-    localStorage.setItem("domain", domain); // save choice
-    router.push(`/domain-info/${domain.toLowerCase()}`); // go to info page
+    localStorage.setItem("domain", domain);
+    router.push(`/question_dashboard?v=app&exam=${domain.toLowerCase()}`);
   };
 
   return (

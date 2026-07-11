@@ -4,6 +4,8 @@ import { google } from '@ai-sdk/google'
 import { NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { clerkIdToUuid, parseSessionIdToBigInt } from '@/utils/helpers'
+import { isAdmin } from '@/utils/admin'
+import { rateLimit, tooManyRequests } from '@/utils/rateLimit'
 
 interface Question {
   id: number
@@ -30,6 +32,15 @@ export async function POST(req: Request) {
   if (!userId) {
     return NextResponse.json({ success: false, error: "Unauthorized" }, { status: 401 })
   }
+
+  // ADMIN ONLY: this endpoint DELETES the caller's attempts/mastery/signals and
+  // reseeds synthetic test data. It is a debugging tool, never for real users.
+  if (!isAdmin(userId)) {
+    return NextResponse.json({ success: false, error: "Forbidden" }, { status: 403 })
+  }
+
+  const rl = rateLimit('audit-run', userId, 5, 60 * 1000)
+  if (!rl.ok) return tooManyRequests(rl)
 
   const userUuid = clerkIdToUuid(userId)
   log(`Starting pipeline audit. Logged-in User UUID: ${userUuid}`)

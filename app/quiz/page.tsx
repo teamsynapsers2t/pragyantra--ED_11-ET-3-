@@ -3,6 +3,7 @@
 import { useState, useEffect, useRef, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
+import MathHtml from "@/app/components/MathHtml";
 
 interface Question {
   id: string;
@@ -250,9 +251,10 @@ function QuizContent() {
 
         {/* Question Body */}
         <div className="p-6 md:p-8 space-y-6">
-          <div 
+          <MathHtml
+            stripOptions
             className="text-white text-base md:text-lg font-medium leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
-            dangerouslySetInnerHTML={{ __html: question.question }}
+            html={question.question}
           />
 
           {/* Choices or Numerical Input */}
@@ -316,7 +318,7 @@ function QuizContent() {
                     <span className={`w-8 h-8 shrink-0 rounded-xl flex items-center justify-center text-xs font-bold transition-all ${letterStyle}`}>
                       {optionLetters[i]}
                     </span>
-                    <span className="flex-1 overflow-x-auto whitespace-pre-wrap" dangerouslySetInnerHTML={{ __html: opt }} />
+                    <MathHtml inline className="flex-1 overflow-x-auto whitespace-pre-wrap" html={opt} />
                   </button>
                 );
               })}
@@ -369,9 +371,9 @@ function QuizContent() {
               <h4 className="text-sm font-extrabold text-emerald-400 flex items-center gap-1.5">
                 <span>📝</span> Detailed Explanation
               </h4>
-              <div
-                className="text-gray-300 text-sm md:text-base leading-relaxed overflow-x-auto whitespace-pre-wrap select-text"
-                dangerouslySetInnerHTML={{ __html: revealExp }}
+              <MathHtml
+                className="text-gray-300 text-sm md:text-base leading-loose overflow-x-auto whitespace-pre-wrap select-text"
+                html={revealExp}
               />
             </motion.div>
           )}

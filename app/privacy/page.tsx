@@ -8,10 +8,9 @@ export const metadata: Metadata = {
     "How PAPER collects, uses, and protects your data while you prepare for JEE and NEET.",
 };
 
-// NOTE: This is a template covering the standard disclosures for an Indian
-// ed-tech SaaS. Replace the [BRACKETED] placeholders with your real legal
-// entity, address, and contact, and have a lawyer review before public launch.
-const LAST_UPDATED = "June 28, 2026";
+// NOTE: Covers the standard disclosures for an Indian ed-tech SaaS. Update the
+// operating entity when the company is incorporated, and have a lawyer review.
+const LAST_UPDATED = "July 5, 2026";
 
 export default function PrivacyPage() {
   return (
@@ -25,7 +24,7 @@ export default function PrivacyPage() {
 
           <p>
             PAPER (&ldquo;PAPER&rdquo;, &ldquo;we&rdquo;, &ldquo;us&rdquo;) is operated by
-            [LEGAL ENTITY NAME], [REGISTERED ADDRESS], India. This policy explains what
+            Tanishq Tumram, Pune, Maharashtra, India. This policy explains what
             personal data we collect when you use our website and learning platform (the
             &ldquo;Service&rdquo;), why we collect it, and the rights you have over it. By
             using the Service you agree to this policy.
@@ -60,30 +59,44 @@ export default function PrivacyPage() {
             <li><strong>Clerk</strong> — authentication and account management.</li>
             <li><strong>Supabase</strong> — database and storage of your learning data.</li>
             <li><strong>Google (Gemini)</strong> — AI generation of plans and analysis.</li>
+            <li><strong>PostHog</strong> — product analytics (see section 5).</li>
           </ul>
 
-          <h2>5. Data retention</h2>
+          <h2>5. Cookies and analytics</h2>
+          <p>
+            The Service uses a small number of cookies and similar technologies:
+          </p>
+          <ul>
+            <li><strong>Authentication cookies</strong> — set by Clerk to keep you signed in securely. These are essential and cannot be switched off.</li>
+            <li><strong>Analytics</strong> — we use PostHog to understand how the Service is used (pages visited, features used, approximate device and browser information) so we can improve it. Analytics data is associated with your account only after you sign in, and is never sold or used for advertising.</li>
+          </ul>
+          <p>
+            You can limit analytics collection with browser-level controls such as content
+            blockers; the Service will continue to work.
+          </p>
+
+          <h2>6. Data retention</h2>
           <p>
             We keep your data for as long as your account is active. If you delete your
             account, we delete or anonymise your personal data within a reasonable period,
             except where we are required to retain it by law.
           </p>
 
-          <h2>6. Your rights</h2>
+          <h2>7. Your rights</h2>
           <p>
             You may request access to, correction of, or deletion of your personal data, and
-            you may withdraw consent at any time. To exercise these rights, contact us at
-            [CONTACT EMAIL].
+            you may withdraw consent at any time. To exercise these rights, contact us at{" "}
+            <a href="mailto:thepaperco26@gmail.com">thepaperco26@gmail.com</a>.
           </p>
 
-          <h2>7. Children</h2>
+          <h2>8. Children</h2>
           <p>
             The Service is intended for students preparing for competitive exams. If you are
             under 18, you should use the Service with the consent and supervision of a parent
             or guardian.
           </p>
 
-          <h2>8. Security</h2>
+          <h2>9. Security</h2>
           <p>
             We use industry-standard measures to protect your data, including encrypted
             connections and access controls. No method of transmission or storage is fully
@@ -91,22 +104,19 @@ export default function PrivacyPage() {
             breaches as required by law.
           </p>
 
-          <h2>9. Changes to this policy</h2>
+          <h2>10. Changes to this policy</h2>
           <p>
             We may update this policy from time to time. We will revise the &ldquo;last
             updated&rdquo; date above and, for material changes, notify you through the
             Service.
           </p>
 
-          <h2>10. Contact</h2>
+          <h2>11. Contact</h2>
           <p>
-            Questions about this policy? Email us at [CONTACT EMAIL].
+            Questions about this policy? Email us at{" "}
+            <a href="mailto:thepaperco26@gmail.com">thepaperco26@gmail.com</a> or visit our{" "}
+            <Link href="/contact">contact page</Link>.
           </p>
-
-          <div className={styles.notice}>
-            This document is a template and not legal advice. Replace the bracketed
-            placeholders and have it reviewed by a qualified lawyer before launch.
-          </div>
         </article>
       </div>
     </div>

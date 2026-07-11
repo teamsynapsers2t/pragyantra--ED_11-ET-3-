@@ -5,6 +5,7 @@ import { ClerkProvider } from "@clerk/nextjs";
 import { dark } from "@clerk/themes";
 import Script from "next/script";
 import PostHogProvider from "./providers/PostHogProvider";
+import MentorChat from "./components/MentorChat";
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
@@ -65,7 +66,10 @@ export default function RootLayout({
           <ThemeProvider attribute="class" defaultTheme="light">
             {children}
           </ThemeProvider>
-          
+
+          {/* AI mentor — floating; self-hides until the student is signed in */}
+          <MentorChat />
+
           {/* MathJax Setup for LaTeX equation rendering */}
           <Script id="mathjax-config" strategy="beforeInteractive">
             {`

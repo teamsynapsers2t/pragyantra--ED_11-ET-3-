@@ -242,9 +242,19 @@ function DashboardContent() {
     .map(s => {
       const lost = (s.totalAttempts || 0) - (s.totalCorrect || 0);
       const freq = s.totalAttempts > 0 ? Math.round((1 - (s.totalCorrect || 0) / s.totalAttempts) * 100) : 0;
-      const errType = s.dominantErrorType ? clean(s.dominantErrorType) : "Conceptual gap";
+      // Say WHY there's a gap using this concept's real numbers, instead of a
+      // generic "Conceptual gap" label repeated on every card.
+      const why = s.dominantErrorType
+        ? `${clean(s.dominantErrorType)} errors`
+        : s.totalAttempts > 0 && freq >= 60
+          ? `Wrong ${freq}% of the time so far`
+          : s.masteryScore != null && s.masteryScore < 40
+            ? `Mastery stuck at ${s.masteryScore}%`
+            : s.totalAttempts > 0
+              ? `Inconsistent — right and wrong on repeat attempts`
+              : "Not enough attempts yet to confirm";
       return {
-        mistake: `${errType} in ${clean(s.conceptName)}`,
+        mistake: `${why} in ${clean(s.conceptName)}`,
         concept: clean(s.conceptName),
         subject: clean(s.subject || "Physics"),
         marks: lost,
@@ -280,7 +290,6 @@ function DashboardContent() {
     { label: "Root Causes", path: "/dashboard/root-causes", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg> },
     { label: "Weak Concepts", path: "/dashboard/weakness", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3 2 8l10 5 10-5-10-5Z"/><path d="M2 16l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg> },
     { label: "Practice", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/></svg> },
-    { label: "Mock Tests", path: "/question_dashboard", icon: <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round"><rect x="5" y="4" width="14" height="17" rx="2"/><path d="M9 4V3h6v1"/><path d="M8 10h8M8 14h6"/></svg> },
   ];
 
   const glass = "rgba(255,255,255,0.55)";
@@ -435,7 +444,7 @@ function DashboardContent() {
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: 14 }}>
                       <div style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, fontWeight: 800, letterSpacing: 1.4, color: "#B97A12", textTransform: "uppercase" }}>
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/></svg>
-                        Root Cause Map · We go deeper
+                        Here&apos;s why your marks are stuck
                       </div>
                       <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
                         {lastRefreshed && (
@@ -485,8 +494,8 @@ function DashboardContent() {
                     </h2>
                     <p style={{ margin: "11px 0 0", fontSize: 16, color: "#7A5A1E", lineHeight: 1.55, maxWidth: 720 }}>
                       {chain.length === 1
-                        ? "This is a foundational topic you practiced and struggled with. Fixing it will unblock everything that builds on it."
-                        : "This root concept is weaker than the topic it feeds into. Fix the foundation and the symptom recovers automatically."}
+                        ? "This is your deepest gap right now. Fixing it directly unblocks every topic built on it — you don’t need to tackle each one separately."
+                        : "You’ve likely been practising the symptom, not the cause. Fix the root once and the surface weakness recovers on its own."}
                     </p>
 
                     {/* TOP 2 CHAINS for the active subject */}
@@ -512,7 +521,7 @@ function DashboardContent() {
                                 <div style={{ fontSize: 18, fontWeight: 800, color: "#5A3D0A", lineHeight: 1.2 }}>{node.name}</div>
                                 <div style={{ display: "flex", alignItems: "baseline", gap: 6 }}>
                                   <span style={{ fontSize: 32, fontWeight: 800, color: "#5A3D0A" }}>{node.mastery}%</span>
-                                  <span style={{ fontSize: 11, color: "#A8852E" }}>mastery — start here</span>
+                                  <span style={{ fontSize: 11, color: "#A8852E" }}>of the required ideas are reliable — start here</span>
                                 </div>
                                 <div style={{ height: 8, background: "rgba(180,130,40,.28)", borderRadius: 6, overflow: "hidden" }}>
                                   <div style={{ height: "100%", width: `${node.mastery}%`, background: "#E0902F", borderRadius: 6 }} />
@@ -573,15 +582,33 @@ function DashboardContent() {
                       </div>
                     ))}
 
+                    {/* INSIGHT CHIPS — purely visual, uses existing computed data */}
+                    {!loadingSignals && chain.length > 0 && (
+                      <div style={{ display: "flex", flexWrap: "wrap", gap: 9, marginTop: 20 }}>
+                        {rootUnlocks.length > 0 && (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 20, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(180,130,40,0.28)", fontSize: 12.5, color: "#7A5A1E", fontWeight: 600, backdropFilter: "blur(8px)" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B97A12" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8Z"/></svg>
+                            Fixing this improves <b style={{ color: "#C7600F", marginLeft: 4 }}>{rootUnlocks.length} connected topic{rootUnlocks.length !== 1 ? "s" : ""}</b>
+                          </div>
+                        )}
+                        {chain.length > 1 && (
+                          <div style={{ display: "inline-flex", alignItems: "center", gap: 7, padding: "7px 14px", borderRadius: 20, background: "rgba(255,255,255,0.7)", border: "1px solid rgba(180,130,40,0.28)", fontSize: 12.5, color: "#7A5A1E", fontWeight: 600, backdropFilter: "blur(8px)" }}>
+                            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#B97A12" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                            You&apos;ve likely been practising the symptom instead of the cause
+                          </div>
+                        )}
+                      </div>
+                    )}
+
                     {/* ACTION BAR */}
                     <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 18, flexWrap: "wrap", marginTop: 22, background: "rgba(255,255,255,0.6)", border: "1px solid rgba(255,255,255,0.85)", borderRadius: 18, padding: "18px 24px", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)" }}>
                       <div style={{ display: "flex", alignItems: "center", gap: 30, flexWrap: "wrap" }}>
                         <div>
-                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .6, textTransform: "uppercase", color: "#A2937F" }}>Recommended action</div>
-                          <div style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26", marginTop: 4 }}>Start at the foundation</div>
+                          <div style={{ fontSize: 11, fontWeight: 700, letterSpacing: .6, textTransform: "uppercase", color: "#A2937F" }}>What to do right now</div>
+                          <div style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26", marginTop: 4 }}>Fix the root, not the symptom</div>
                         </div>
                         <div style={{ display: "flex", gap: 28, flexWrap: "wrap" }}>
-                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Est. gain</span><span style={{ fontSize: 17, fontWeight: 800, color: "#1F8A5B" }}>{estGainHi > 0 ? `+${estGainLo} to +${estGainHi} marks` : "—"}</span></div>
+                          <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Marks you can recover</span><span style={{ fontSize: 17, fontWeight: 800, color: "#1F8A5B" }}>{estGainHi > 0 ? `+${estGainLo} to +${estGainHi}` : "—"}</span></div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Topics it unblocks</span><span style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26" }}>{rootUnlocks.length}</span></div>
                           <div style={{ display: "flex", flexDirection: "column", gap: 3 }}><span style={{ fontSize: 12, color: "#9A8B7C", fontWeight: 600 }}>Est. focus time</span><span style={{ fontSize: 17, fontWeight: 800, color: "#3A2E26" }}>{estMinutes > 0 ? `~${estMinutes} min` : "—"}</span></div>
                         </div>
@@ -595,8 +622,8 @@ function DashboardContent() {
                 <section style={{ background: glass, backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, border: glassBorder, borderRadius: 26, padding: "30px 32px", marginBottom: 22, boxShadow: cardShadow }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Weak Concepts</h3>
-                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>Fix these in order — weakest first.</p>
+                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>These concepts are holding you back</h3>
+                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>In order of impact. Fix the top one first — it&apos;s blocking everything below it.</p>
                     </div>
                     <span style={{ fontSize: 12, fontWeight: 700, color: "#A89A8C", background: "rgba(120,90,50,0.08)", padding: "6px 14px", borderRadius: 20 }}>Priority order</span>
                   </div>
@@ -653,8 +680,8 @@ function DashboardContent() {
                 <section style={{ background: glass, backdropFilter: glassBlur, WebkitBackdropFilter: glassBlur, border: glassBorder, borderRadius: 26, padding: "30px 32px", marginBottom: 22, boxShadow: cardShadow }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", gap: 12, flexWrap: "wrap", marginBottom: 10 }}>
                     <div>
-                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Micro Weaknesses</h3>
-                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>The exact mistakes — ranked by marks lost.</p>
+                      <h3 style={{ margin: 0, fontSize: 22, fontWeight: 800, color: "#2E2620" }}>Where marks are leaking</h3>
+                      <p style={{ margin: "6px 0 0", fontSize: 14.5, color: "#8C7D6E" }}>Specific mistake patterns PAPER traced in your attempts, ranked by how much they&apos;re costing you.</p>
                     </div>
                     <button onClick={() => router.push("/dashboard/weakness")} style={{ fontSize: 13.5, fontWeight: 700, color: "#D5740E", background: "none", border: "none", cursor: "pointer", whiteSpace: "nowrap" }}>View all</button>
                   </div>
@@ -685,7 +712,7 @@ function DashboardContent() {
                 {/* ANALYTICS STRIP */}
                 <section style={{ background: "rgba(255,255,255,0.5)", backdropFilter: "blur(18px) saturate(1.2)", WebkitBackdropFilter: "blur(18px) saturate(1.2)", border: "1px solid rgba(255,255,255,0.65)", borderRadius: 24, padding: "24px 32px", boxShadow: "0 12px 38px -22px rgba(170,110,45,0.3)" }}>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 18 }}>
-                    <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: .7, textTransform: "uppercase", color: "#A2937F" }}>Supporting Analytics</span>
+                    <span style={{ fontSize: 12, fontWeight: 800, letterSpacing: .7, textTransform: "uppercase", color: "#A2937F" }}>Your practice, at a glance</span>
                     <span style={{ fontSize: 12.5, fontWeight: 600, color: "#B0A192" }}>This week</span>
                   </div>
                   <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", rowGap: 18 }}>
@@ -694,7 +721,9 @@ function DashboardContent() {
                       <div>
                         <div style={{ fontSize: 11.5, fontWeight: 700, letterSpacing: .5, textTransform: "uppercase", color: "#A2937F" }}>Overall Mastery</div>
                         <div style={{ fontSize: 36, fontWeight: 800, color: "#2E2620", lineHeight: 1.05 }}>{loadingSignals ? "…" : `${overallMastery}%`}</div>
-                        <div style={{ fontSize: 12.5, color: "#1F8A5B", fontWeight: 700 }}>Based on all sessions</div>
+                        <div style={{ fontSize: 12.5, color: overallMastery < 40 ? "#C2473A" : overallMastery < 70 ? "#B07D1E" : "#1F8A5B", fontWeight: 700 }}>
+                          {loadingSignals ? "" : overallMastery < 40 ? "Most ideas still need work." : overallMastery < 70 ? "Building consistency." : "Strong foundation forming."}
+                        </div>
                       </div>
                     </div>
                     {[

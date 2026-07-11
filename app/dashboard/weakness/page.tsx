@@ -177,7 +177,7 @@ function WeaknessCard({ signal, index, visible }: { signal: WeaknessSignal; inde
         <div style={{ marginTop: 14, display: "flex", alignItems: "center", gap: 14, padding: "12px 16px", borderRadius: 14, background: "rgba(255,237,203,0.6)", border: "1px solid rgba(240,183,72,.3)" }}>
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#B97A12" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8"/><circle cx="12" cy="12" r="3"/></svg>
           <div>
-            <div style={{ fontSize: 11, fontWeight: 800, color: "#B97A12", textTransform: "uppercase", letterSpacing: .6 }}>Foundation gap</div>
+            <div style={{ fontSize: 11, fontWeight: 800, color: "#B97A12", textTransform: "uppercase", letterSpacing: .6 }}>The real cause sits deeper</div>
             <div style={{ fontSize: 14, fontWeight: 700, color: "#5A3D0A", marginTop: 2 }}>
               {rootConceptName}
             </div>
@@ -190,7 +190,7 @@ function WeaknessCard({ signal, index, visible }: { signal: WeaknessSignal; inde
         <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 10 }}>
           <span style={{ width: 8, height: 8, borderRadius: "50%", background: sev.dot, flexShrink: 0, animation: visible ? "liveBlip 1.6s ease-in-out infinite" : "none" }} />
           <span style={{ fontSize: 11, fontWeight: 800, letterSpacing: .8, color: "#B97A12", textTransform: "uppercase" }}>
-            Engine Prediction
+            Why PAPER flagged this
           </span>
         </div>
         <p style={{ margin: 0, fontSize: 14.5, color: "#5A3D0A", lineHeight: 1.7, fontWeight: 500, whiteSpace: "pre-line" }}>
@@ -328,8 +328,8 @@ export default function WeaknessPage() {
                 Back
               </button>
               <div>
-                <h1 style={{ margin: 0, fontSize: "clamp(20px,2.8vw,26px)", fontWeight: 800, color: "#2E2620", letterSpacing: -0.3 }}>Your Full Weakness Report</h1>
-                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#8C7D6E" }}>Real predictions from our engine based on your attempt patterns.</p>
+                <h1 style={{ margin: 0, fontSize: "clamp(20px,2.8vw,26px)", fontWeight: 800, color: "#2E2620", letterSpacing: -0.3 }}>What&apos;s really costing you marks</h1>
+                <p style={{ margin: "4px 0 0", fontSize: 14, color: "#8C7D6E" }}>Diagnosed from your actual attempt patterns — not guesses.</p>
               </div>
             </div>
 

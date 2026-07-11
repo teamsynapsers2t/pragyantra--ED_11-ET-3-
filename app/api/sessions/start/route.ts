@@ -2,6 +2,7 @@ import { auth } from '@clerk/nextjs/server'
 import { NextResponse } from 'next/server'
 import { clerkIdToUuid } from '@/utils/helpers'
 import { createServiceClient } from '@/utils/supabase/service'
+import { rateLimit, tooManyRequests } from "@/utils/rateLimit"
 
 export async function POST(req: Request) {
   try {
@@ -9,6 +10,9 @@ export async function POST(req: Request) {
     if (!userId) {
       return new NextResponse("Unauthorized", { status: 401 })
     }
+
+    const rl = rateLimit('sessions-start', userId, 60, 60 * 1000)
+    if (!rl.ok) return tooManyRequests(rl)
 
     const body = await req.json()
     const { source, subject, chapter, topic } = body
