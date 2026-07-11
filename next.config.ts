@@ -14,13 +14,13 @@ import type { NextConfig } from "next";
 // restricting WHICH hosts can be contacted (connect/img/frame/form/base).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.paperai.online https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
   "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
-  "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://cdn.jsdelivr.net",
+  "connect-src 'self' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.paperai.online https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://cdn.jsdelivr.net",
   "worker-src 'self' blob:",
-  "frame-src 'self' https://*.clerk.accounts.dev https://challenges.cloudflare.com",
+  "frame-src 'self' https://*.clerk.accounts.dev https://*.paperai.online https://challenges.cloudflare.com",
   "frame-ancestors 'none'",
   "object-src 'none'",
   "base-uri 'self'",
