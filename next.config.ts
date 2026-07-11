@@ -14,7 +14,7 @@ import type { NextConfig } from "next";
 // restricting WHICH hosts can be contacted (connect/img/frame/form/base).
 const csp = [
   "default-src 'self'",
-  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.paperai.online https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com",
+  "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://*.clerk.accounts.dev https://clerk.com https://*.clerk.com https://*.paperai.online https://challenges.cloudflare.com https://cdn.jsdelivr.net https://us.i.posthog.com https://us-assets.i.posthog.com",
   "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdn.jsdelivr.net",
   "font-src 'self' data: https://fonts.gstatic.com https://cdn.jsdelivr.net",
   "img-src 'self' data: blob: https:",
