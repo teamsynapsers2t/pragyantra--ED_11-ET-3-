@@ -57,7 +57,7 @@ export default function Page() {
 
         {/* Clerk Card Wrapper */}
         <div className="auth-card-wrapper">
-          <SignUp fallbackRedirectUrl="/dashboard" />
+          <SignUp fallbackRedirectUrl="/select-domain" />
         </div>
       </div>
     </>
